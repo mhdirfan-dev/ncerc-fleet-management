@@ -2,7 +2,7 @@
   "version": 2,
   "builds": [
     {
-      "src": "Dashboard.html",
+      "src": "**/*",
       "use": "@vercel/static"
     }
   ],
@@ -10,6 +10,14 @@
     {
       "src": "/",
       "dest": "Dashboard.html"
+    },
+    {
+      "src": "/entry_compressed.mp4",
+      "dest": "/entry_compressed.mp4"
+    },
+    {
+      "src": "/exit_compressed.mp4",
+      "dest": "/exit_compressed.mp4"
     }
   ]
 }
