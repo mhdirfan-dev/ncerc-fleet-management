@@ -1,0 +1,24 @@
+# Python
+venv/
+__pycache__/
+*.pyc
+*.pyo
+
+# Runtime data
+data/detection_backup.json
+data/detection_output.avi
+
+# Video test files (too large for GitHub)
+*.mov
+*.MOV
+*.avi
+*.mp4
+
+# AI model files (too large for GitHub — download separately)
+ai_engine/models/yolo12n.pt
+ai_engine/models/license_plate_detector.pt
+
+# OS files
+.DS_Store
+Thumbs.db
+```

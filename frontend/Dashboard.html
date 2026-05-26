@@ -1,0 +1,1782 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>NCERC — Campus Fleet Management</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,700;0,9..40,900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:#f9fafb;color:#1e293b;min-height:100vh}
+/* HEADER */
+header{position:fixed;top:0;width:100%;z-index:100;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.08);display:flex;align-items:center;justify-content:space-between;padding:0 24px;height:72px}
+.hdr-left{display:flex;align-items:center;gap:12px}
+.hdr-logo{background:#0f3697;width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center}
+.hdr-logo svg{width:24px;height:24px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.hdr-brand{font-weight:900;font-size:18px;letter-spacing:.5px}
+.hdr-title{color:#0f3697;font-weight:900;font-size:22px;letter-spacing:-.3px}
+.hdr-menu{width:40px;height:40px;border-radius:50%;background:#f1f5f9;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.hdr-menu svg{width:22px;height:22px;stroke:#64748b;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+/* HERO */
+/* ═══ HERO ═══════════════════════════════════════════════ */
+.hero{margin-top:72px;height:560px;position:relative;overflow:hidden;cursor:none}
+.hero-img-layer{
+  position:absolute;inset:-20px;
+  background:url('https://www.thenehrucolleges.com/images/ncerc-bnr.jpg') center/cover no-repeat;
+  filter:blur(0px) brightness(0.55);
+  transform:scale(1.08);
+  transition:filter .4s ease, transform .4s ease;
+  will-change:transform,filter;
+}
+.hero-blur-layer{
+  position:absolute;inset:0;
+  background:radial-gradient(ellipse 80% 60% at var(--mx,50%) var(--my,50%),
+    rgba(15,54,151,.45) 0%,
+    rgba(0,0,0,.0) 70%);
+  transition:background .15s ease;
+  z-index:1;
+}
+.hero-color-layer{
+  position:absolute;inset:0;
+  background:linear-gradient(
+    160deg,
+    rgba(11,37,117,.5) 0%,
+    rgba(0,0,0,.3) 40%,
+    rgba(0,0,0,.75) 100%
+  );
+  z-index:2;
+}
+.hero-grain{
+  position:absolute;inset:0;z-index:3;opacity:.04;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+}
+.hero-content{position:relative;z-index:4;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:40px 24px 0}
+.hero-badge{
+  display:inline-flex;align-items:center;gap:8px;
+  background:rgba(255,255,255,.12);backdrop-filter:blur(12px);
+  border:1px solid rgba(255,255,255,.25);
+  color:#fff;font-size:11px;font-weight:800;letter-spacing:1.5px;
+  padding:6px 16px;border-radius:20px;margin-bottom:20px;
+  animation:fadein .8s ease;
+}
+.hero-stats-row{
+  display:flex;align-items:center;gap:0;
+  background:rgba(255,255,255,.1);backdrop-filter:blur(16px);
+  border:1px solid rgba(255,255,255,.2);
+  border-radius:16px;padding:16px 28px;margin-top:32px;
+  animation:fadein 1.2s ease;
+}
+.hero-stat{display:flex;flex-direction:column;align-items:center;gap:4px;padding:0 20px}
+.hero-stat span:first-child{font-size:28px;font-weight:900;color:#fff;line-height:1}
+.hero-stat span:last-child{font-size:11px;font-weight:600;color:rgba(255,255,255,.7);letter-spacing:.5px;text-transform:uppercase}
+.hero-stat-div{width:1px;height:40px;background:rgba(255,255,255,.2)}
+@keyframes fadein{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+
+/* custom cursor inside hero */
+.hero-cursor{
+  position:fixed;pointer-events:none;z-index:9999;
+  width:24px;height:24px;border-radius:50%;
+  border:2px solid rgba(255,255,255,.8);
+  transform:translate(-50%,-50%);
+  transition:width .2s,height .2s,border-color .2s;
+  display:none;
+}
+.hero-cursor-dot{
+  position:fixed;pointer-events:none;z-index:9999;
+  width:5px;height:5px;border-radius:50%;
+  background:#fff;transform:translate(-50%,-50%);
+  display:none;
+}
+
+/* ═══ OVERLAP CARDS click effect ════════════════════════ */
+.oc-clickable{cursor:pointer;transition:transform .2s, box-shadow .2s}
+.oc-clickable:hover{transform:translateY(-4px);box-shadow:0 28px 72px rgba(0,0,0,.18),0 6px 20px rgba(0,0,0,.08)}
+.oc-clickable:active{transform:translateY(-1px)}
+
+/* ═══ BUS LIST MODAL ══════════════════════════════════════ */
+.buslist-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:998;backdrop-filter:blur(4px);align-items:center;justify-content:center}
+.buslist-overlay.show{display:flex}
+.buslist-box{background:#fff;border-radius:24px;width:min(480px,92vw);max-height:80vh;overflow:hidden;box-shadow:0 40px 100px rgba(0,0,0,.3);animation:alertIn .3s ease;display:flex;flex-direction:column}
+.buslist-head{padding:24px 28px;display:flex;align-items:center;justify-content:space-between}
+.buslist-head.inside{background:linear-gradient(135deg,#0f3697,#1e40af)}
+.buslist-head.outside{background:linear-gradient(135deg,#ea580c,#f97316)}
+.buslist-head-title{color:#fff;font-size:18px;font-weight:800}
+.buslist-head-count{color:rgba(255,255,255,.8);font-size:13px;margin-top:2px}
+.buslist-close{background:rgba(255,255,255,.2);border:none;width:32px;height:32px;border-radius:50%;cursor:pointer;color:#fff;font-size:16px;display:flex;align-items:center;justify-content:center}
+.buslist-body{padding:20px 28px;overflow-y:auto;flex:1}
+.buslist-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.buslist-item{display:flex;align-items:center;gap:10px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:12px 14px}
+.buslist-item svg{width:18px;height:18px;stroke:#0f3697;fill:none;stroke-width:2;flex-shrink:0}
+.buslist-item.outside-item svg{stroke:#ea580c}
+.buslist-plate{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:600;color:#1e293b}
+.buslist-time{font-size:11px;color:#94a3b8;margin-top:2px}
+.buslist-empty{padding:40px;text-align:center;color:#94a3b8;font-size:14px}
+
+/* ═══ MOUSE TRAIL PARTICLES ══════════════════════════════ */
+.particle{position:fixed;pointer-events:none;z-index:9998;border-radius:50%;animation:particleFade .8s ease forwards}
+@keyframes particleFade{0%{opacity:.6;transform:scale(1)}100%{opacity:0;transform:scale(0)}}
+
+.hero-content{position:relative;z-index:1;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:40px 24px 0}
+.hero-title{font-size:clamp(28px,5.5vw,60px);font-weight:900;color:#fff;letter-spacing:-1px;line-height:1.1;margin-bottom:16px;text-shadow:0 2px 20px rgba(0,0,0,.3)}
+.hero-sub{font-size:20px;color:#e2e8f0;font-weight:400}
+/* MAIN */
+main{max-width:1280px;margin:0 auto;padding:0 20px 80px;position:relative}
+/* OVERLAP CARDS */
+.overlap-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:-96px;position:relative;z-index:20;margin-bottom:40px}
+.overlap-card{background:#fff;border-radius:20px;padding:32px;box-shadow:0 20px 60px rgba(0,0,0,.12),0 4px 16px rgba(0,0,0,.06);display:flex;justify-content:space-between;align-items:flex-start}
+.oc-icon{background:#0f3697;width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;margin-bottom:24px}
+.oc-icon svg{width:24px;height:24px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.oc-num{font-size:64px;font-weight:900;color:#1e293b;line-height:1;margin-bottom:8px}
+.oc-lbl{color:#94a3b8;font-weight:500;font-size:15px}
+.chevbtn{border:none;background:transparent;cursor:pointer;color:#94a3b8;padding:4px}
+.chevbtn svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+/* DATETIME PILL */
+.dt-pill{display:flex;justify-content:center;margin-bottom:32px}
+.dt-inner{background:#0b2575;border-radius:20px;box-shadow:0 8px 32px rgba(11,37,117,.35);display:flex;align-items:stretch;border:2px solid #1642b5;overflow:hidden}
+.dt-block{display:flex;align-items:center;gap:16px;padding:16px 32px}
+.dt-block+.dt-block{border-left:1px solid rgba(255,255,255,.12)}
+.dt-icon svg{width:28px;height:28px;stroke:#93c5fd;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.dt-lbl{color:#93c5fd;font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;margin-bottom:4px}
+.dt-val{color:#fff;font-size:20px;font-weight:700;white-space:nowrap}
+#live-time{font-family:'JetBrains Mono',monospace}
+/* STATUS CARDS */
+.status-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin-bottom:40px}
+.sc{border-radius:16px;padding:24px;display:flex;align-items:center;gap:16px}
+.sc.b{background:#eef4ff;border:1px solid #bfdbfe}
+.sc.g{background:#e8fbf0;border:1px solid #bbf7d0}
+.sc.p{background:#f5eeff;border:1px solid #e9d5ff}
+.sc-icon{width:52px;height:52px;border-radius:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.sc.b .sc-icon{background:#4285f4}.sc.g .sc-icon{background:#10b981}.sc.p .sc-icon{background:#a855f7}
+.sc-icon svg{width:24px;height:24px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.sc.b .sv{color:#0f3697}.sc.g .sv{color:#059669}.sc.p .sv{color:#7e22ce}
+.sv{font-size:26px;font-weight:800}
+.sc.b .sl{color:rgba(15,54,151,.65)}.sc.g .sl{color:rgba(5,150,105,.65)}.sc.p .sl{color:rgba(126,34,206,.65)}
+.sl{font-size:13px;font-weight:500}
+/* BIG CARDS */
+.big-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:48px}
+.bc{border-radius:28px;padding:32px;position:relative;overflow:hidden;color:#fff}
+.bc.gr{background:linear-gradient(135deg,#22c55e,#16a34a);box-shadow:0 16px 40px rgba(34,197,94,.25)}
+.bc.or{background:linear-gradient(135deg,#f97316,#ea580c);box-shadow:0 16px 40px rgba(249,115,22,.25)}
+.bc::before{content:'';position:absolute;width:220px;height:220px;border-radius:50%;background:rgba(255,255,255,.06);right:-60px;top:-60px}
+.bc::after{content:'';position:absolute;width:160px;height:160px;border-radius:50%;background:rgba(255,255,255,.04);left:-40px;bottom:-40px}
+.bc-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:48px;position:relative;z-index:1}
+.bc-iconw{background:rgba(255,255,255,.2);width:56px;height:56px;border-radius:16px;display:flex;align-items:center;justify-content:center}
+.bc-iconw svg{width:28px;height:28px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.bc-num{font-size:72px;font-weight:900;line-height:1;margin-bottom:8px;position:relative;z-index:1}
+.bc.gr .bc-lbl{color:#dcfce7;font-size:18px;font-weight:500;position:relative;z-index:1}
+.bc.or .bc-lbl{color:#ffedd5;font-size:18px;font-weight:500;position:relative;z-index:1}
+/* LOG CARD */
+.log-card{background:#fff;border-radius:28px;border:1px solid #f1f5f9;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.04);margin-bottom:48px}
+.log-hdr{padding:28px 32px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px}
+.log-title-blk{display:flex;align-items:center;gap:16px}
+.log-icon{background:#0f3697;width:52px;height:52px;border-radius:14px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(15,54,151,.3)}
+.log-icon svg{width:28px;height:28px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.log-title{font-size:22px;font-weight:800;color:#1e293b}
+.log-sub{color:#94a3b8;font-size:13px;margin-top:2px}
+.log-ctrl{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.filter-bar{display:flex;gap:4px;background:#f1f5f9;padding:4px;border-radius:12px}
+.ftab{padding:8px 16px;border-radius:9px;font-size:13px;font-weight:600;cursor:pointer;border:none;background:transparent;color:#64748b;font-family:'DM Sans',sans-serif;transition:all .15s}
+.ftab.active{background:#0b2575;color:#fff;box-shadow:0 2px 8px rgba(11,37,117,.25)}
+/* custom row */
+.custom-row{padding:12px 32px;border-bottom:1px solid #f1f5f9;display:none;gap:12px;align-items:center;flex-wrap:wrap;background:#f8fafc}
+.custom-row.show{display:flex}
+.custom-row label{font-size:13px;font-weight:700;color:#64748b}
+.custom-row input{padding:8px 12px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;font-family:'DM Sans',sans-serif;color:#1e293b;outline:none}
+.apply-btn{padding:8px 18px;background:#0f3697;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;font-family:'DM Sans',sans-serif;cursor:pointer}
+/* search row */
+.search-row{padding:16px 32px;border-bottom:1px solid #f1f5f9;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.sw{position:relative;flex:1;min-width:200px}
+.sw svg{position:absolute;left:14px;top:50%;transform:translateY(-50%);width:18px;height:18px;stroke:#94a3b8;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.sw input{width:100%;padding:10px 14px 10px 42px;border:1.5px solid #e2e8f0;border-radius:12px;font-size:14px;font-family:'DM Sans',sans-serif;color:#1e293b;background:#f8fafc;outline:none;transition:all .15s}
+.sw input:focus{border-color:#0f3697;background:#fff}
+.sw input::placeholder{color:#94a3b8}
+.filter-btn{display:flex;align-items:center;gap:8px;padding:10px 18px;border:1.5px solid #e2e8f0;background:#fff;border-radius:12px;font-size:14px;font-weight:600;color:#475569;font-family:'DM Sans',sans-serif;cursor:pointer;transition:all .15s}
+.filter-btn svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.print-btn{display:flex;align-items:center;gap:8px;padding:10px 24px;background:#0b2575;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;box-shadow:0 4px 12px rgba(11,37,117,.25);transition:all .15s;white-space:nowrap}
+.print-btn:hover{background:#0f3697}
+.print-btn svg{width:18px;height:18px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+/* table */
+.tbl-head{display:grid;grid-template-columns:60px 1fr 130px 110px 140px;gap:16px;padding:12px 32px;background:#f8fafc;border-bottom:1px solid #f1f5f9}
+.tbl-head span{font-size:11px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:.6px}
+.tbl-row{display:grid;grid-template-columns:60px 1fr 130px 110px 140px;gap:16px;padding:14px 32px;border-bottom:1px solid #f8fafc;align-items:center;transition:background .1s}
+.tbl-row:hover{background:#f8fafc}
+.tbl-row.flash{animation:rf .9s ease}
+@keyframes rf{0%,100%{background:transparent}25%{background:#dcfce7}}
+.tbl-num{font-size:13px;color:#94a3b8}
+.tbl-plate{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:500;color:#0b2575;letter-spacing:.5px}
+.tbl-date{font-size:13px;color:#64748b}
+.tbl-time{font-family:'JetBrains Mono',monospace;font-size:13px;color:#64748b}
+.badge{display:inline-flex;align-items:center;gap:5px;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:800;letter-spacing:.3px}
+.badge.entry{background:#dcfce7;color:#15803d}
+.badge.exit{background:#ffedd5;color:#c2410c}
+.badge svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+/* empty */
+.empty-st{padding:80px 32px;display:flex;flex-direction:column;align-items:center;text-align:center}
+.empty-circle{background:#f1f5f9;width:80px;height:80px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin-bottom:20px}
+.empty-circle svg{width:40px;height:40px;stroke:#cbd5e1;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.empty-title{font-size:20px;font-weight:700;color:#475569;margin-bottom:6px}
+.empty-sub{font-size:14px;color:#94a3b8}
+/* footer row */
+.tbl-foot{padding:14px 32px;background:#f8fafc;border-top:1px solid #f1f5f9;display:flex;justify-content:space-between;align-items:center;font-size:13px;color:#94a3b8}
+/* live badge */
+.live-badge{display:inline-flex;align-items:center;gap:6px;background:#f0fdf4;border:1px solid #bbf7d0;color:#15803d;font-size:12px;font-weight:700;padding:4px 10px;border-radius:20px}
+.live-dot{width:7px;height:7px;border-radius:50%;background:#22c55e;animation:lp 1.5s infinite}
+@keyframes lp{0%,100%{opacity:1}50%{opacity:.4}}
+.off-badge{display:inline-flex;align-items:center;gap:6px;background:#fef2f2;border:1px solid #fecaca;color:#dc2626;font-size:12px;font-weight:700;padding:4px 10px;border-radius:20px}
+/* FOOTER */
+footer{background:#2c2c2c;color:#9ca3af;border-top:4px solid #0f3697;padding:64px 0 32px}
+.ft-inner{max-width:1280px;margin:0 auto;padding:0 24px}
+.ft-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:48px;margin-bottom:48px}
+.ft-brand{display:flex;align-items:center;gap:12px;margin-bottom:20px}
+.ft-brand-icon{background:#0f3697;padding:8px;border-radius:12px;display:flex}
+.ft-brand-icon svg{width:20px;height:20px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.ft-brand-name{font-weight:900;font-size:18px;color:#fff}
+.ft-desc{color:#6b7280;font-size:13px;line-height:1.7}
+.ft-h{color:#fff;font-weight:800;font-size:16px;margin-bottom:20px}
+.ft-links{list-style:none;display:flex;flex-direction:column;gap:10px}
+.ft-links a{color:#9ca3af;text-decoration:none;font-size:14px}
+.ft-links a:hover{color:#fff}
+.ft-contact{list-style:none;display:flex;flex-direction:column;gap:14px}
+.ft-contact li{display:flex;align-items:flex-start;gap:12px;font-size:13px}
+.ft-contact svg{width:18px;height:18px;stroke:#4285f4;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;margin-top:1px}
+.ft-divider{border:none;border-top:1px solid #374151;margin-bottom:24px}
+.ft-bottom{display:flex;justify-content:space-between;font-size:13px;flex-wrap:wrap;gap:8px}
+.ft-bottom a{color:#4285f4;font-weight:600;text-decoration:none}
+/* dir dropdown */
+.dir-wrap{position:relative}
+.dir-menu{display:none;position:absolute;top:calc(100% + 6px);right:0;background:#fff;border:1px solid #e2e8f0;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.1);z-index:50;overflow:hidden;min-width:150px}
+.dir-opt{padding:10px 16px;font-size:13px;font-weight:600;cursor:pointer;color:#1e293b}
+.dir-opt:hover{background:#f8fafc}
+.dir-opt.g{color:#15803d}.dir-opt.g:hover{background:#f0fdf4}
+.dir-opt.o{color:#c2410c}.dir-opt.o:hover{background:#fff7ed}
+@media(max-width:768px){
+  .hdr-title{display:none}
+  .overlap-grid,.big-grid{grid-template-columns:1fr}
+  .status-grid{grid-template-columns:1fr}
+  .ft-grid{grid-template-columns:1fr}
+  .tbl-head,.tbl-row{grid-template-columns:40px 1fr 100px}
+  .tbl-head span:nth-child(3),.tbl-head span:nth-child(4),
+  .col-date,.col-time{display:none}
+  .dt-inner{flex-direction:column}
+  .dt-block+.dt-block{border-left:none;border-top:1px solid rgba(255,255,255,.12)}
+}
+@media print{
+  header,footer,.filter-bar,.search-row,.custom-row,.log-ctrl,.print-btn,.filter-btn,.status-grid,.big-grid,.overlap-grid,.dt-pill,.hero{display:none!important}
+  .log-card{box-shadow:none;border:1px solid #ddd}
+  .tbl-row{break-inside:avoid}
+}
+
+/* ── ALERT POPUP ──────────────────────────────────────── */
+.alert-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:999;align-items:center;justify-content:center}
+.alert-overlay.show{display:flex}
+.alert-box{background:#fff;border-radius:24px;padding:0;width:min(560px,92vw);box-shadow:0 32px 80px rgba(0,0,0,.25);overflow:hidden;animation:alertIn .3s ease}
+@keyframes alertIn{from{transform:scale(.85);opacity:0}to{transform:scale(1);opacity:1}}
+.alert-head{background:linear-gradient(135deg,#dc2626,#b91c1c);padding:28px 32px;display:flex;align-items:center;gap:16px}
+.alert-head svg{width:36px;height:36px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+.alert-head-text h3{color:#fff;font-size:20px;font-weight:800;margin-bottom:4px}
+.alert-head-text p{color:#fecaca;font-size:13px}
+.alert-body{padding:28px 32px}
+.alert-meta{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px}
+.alert-meta-item{background:#f8fafc;border-radius:12px;padding:14px;border:1px solid #e2e8f0}
+.alert-meta-item .aml{font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+.alert-meta-item .amv{font-size:16px;font-weight:800;color:#1e293b}
+.alert-missing-title{font-size:13px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px}
+.alert-bus-list{display:flex;flex-direction:column;gap:8px;max-height:220px;overflow-y:auto}
+.alert-bus-item{display:flex;align-items:center;gap:12px;background:#fff5f5;border:1px solid #fecaca;border-radius:10px;padding:10px 16px}
+.alert-bus-item svg{width:18px;height:18px;stroke:#dc2626;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+.alert-bus-num{font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:600;color:#991b1b}
+.alert-footer{padding:20px 32px;background:#f8fafc;border-top:1px solid #f1f5f9;display:flex;justify-content:flex-end;gap:12px}
+.alert-dismiss{padding:10px 28px;background:#0f3697;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;font-family:'DM Sans',sans-serif;cursor:pointer}
+.alert-dismiss:hover{background:#0b2575}
+
+/* ── ALERTS PANEL in log card ─────────────────────────── */
+.alerts-section{margin-bottom:48px}
+.alerts-card{background:#fff;border-radius:28px;border:1px solid #fecaca;overflow:hidden;box-shadow:0 2px 8px rgba(220,38,38,.08)}
+.alerts-hdr{padding:22px 32px;background:linear-gradient(135deg,#fff5f5,#fff);border-bottom:1px solid #fecaca;display:flex;align-items:center;justify-content:space-between}
+.alerts-hdr-left{display:flex;align-items:center;gap:14px}
+.alerts-icon{background:#dc2626;width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center}
+.alerts-icon svg{width:22px;height:22px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.alerts-title{font-size:18px;font-weight:800;color:#991b1b}
+.alerts-sub{color:#f87171;font-size:12px;margin-top:2px}
+.alert-row{padding:16px 32px;border-bottom:1px solid #fff5f5;display:flex;align-items:flex-start;gap:16px}
+.alert-row:last-child{border-bottom:none}
+.alert-row-icon{width:36px;height:36px;border-radius:10px;background:#fee2e2;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px}
+.alert-row-icon svg{width:18px;height:18px;stroke:#dc2626;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.alert-row-body{flex:1}
+.alert-row-title{font-size:14px;font-weight:700;color:#991b1b;margin-bottom:4px}
+.alert-row-buses{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.alert-bus-tag{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;color:#991b1b;background:#fee2e2;border:1px solid #fecaca;border-radius:6px;padding:3px 8px}
+.alert-row-time{font-size:12px;color:#94a3b8;white-space:nowrap}
+.no-alerts{padding:40px 32px;text-align:center;color:#94a3b8;font-size:14px}
+
+/* alert notification badge */
+.alert-badge{display:inline-flex;align-items:center;justify-content:center;background:#dc2626;color:#fff;font-size:11px;font-weight:800;width:20px;height:20px;border-radius:50%;margin-left:8px;animation:lp 1.5s infinite}
+.alerts-hdr-left{position:relative}
+
+/* alerts filter bar */
+.alerts-filter{padding:14px 32px;border-bottom:1px solid #fecaca;display:flex;gap:12px;align-items:center;flex-wrap:wrap;background:#fff9f9}
+.alerts-filter label{font-size:13px;font-weight:700;color:#991b1b}
+.alerts-date-input{padding:8px 12px;border:1.5px solid #fecaca;border-radius:10px;font-size:13px;font-family:'DM Sans',sans-serif;color:#1e293b;outline:none;background:#fff}
+.alerts-date-input:focus{border-color:#dc2626}
+.alerts-search{flex:1;min-width:160px;position:relative}
+.alerts-search svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);width:16px;height:16px;stroke:#94a3b8;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.alerts-search input{width:100%;padding:8px 12px 8px 36px;border:1.5px solid #fecaca;border-radius:10px;font-size:13px;font-family:'DM Sans',sans-serif;color:#1e293b;outline:none;background:#fff}
+.alerts-search input:focus{border-color:#dc2626}
+.alerts-today-btn{padding:8px 16px;background:#dc2626;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;font-family:'DM Sans',sans-serif;cursor:pointer}
+.alerts-today-btn:hover{background:#b91c1c}
+.alert-row.unseen{background:#fff5f5;border-left:3px solid #dc2626}
+
+.hero-dot{width:10px;height:10px;border-radius:50%;background:rgba(255,255,255,.5);cursor:pointer;border:2px solid rgba(255,255,255,.7);transition:all .3s}
+.hero-dot.active{background:#fff;width:28px;border-radius:6px}
+#about-section h2,#about-section h3{font-family:'DM Sans',sans-serif}
+
+/* ═══════════════════════════════════════════════════════════
+   ENTRANCE SCREEN
+═══════════════════════════════════════════════════════════ */
+#entrance{
+  position:fixed;inset:0;z-index:10000;
+  background:#000;
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  overflow:hidden;
+  cursor:none;
+}
+/* bg image layer */
+#entrance-bg{
+  position:absolute;inset:-30px;
+  background:url('https://www.thenehrucolleges.com/images/ncerc-bnr.jpg') center/cover no-repeat;
+  filter:brightness(0) blur(0px);
+  transform:scale(1.15);
+  transition:none;
+}
+/* dark vignette */
+#entrance-vignette{
+  position:absolute;inset:0;
+  background:radial-gradient(ellipse 100% 90% at 50% 50%,
+    rgba(0,0,0,0) 30%,
+    rgba(0,0,0,.9) 100%);
+  z-index:1;
+}
+/* scanline effect */
+#entrance-scan{
+  position:absolute;inset:0;z-index:2;
+  background:repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0,0,0,.08) 2px,
+    rgba(0,0,0,.08) 4px
+  );
+  pointer-events:none;
+  opacity:0;
+}
+/* content */
+#entrance-content{
+  position:relative;z-index:3;
+  display:flex;flex-direction:column;
+  align-items:center;text-align:center;
+  padding:40px;
+}
+/* logo reveal */
+#ent-logo{
+  height:72px;object-fit:contain;
+  opacity:0;transform:translateY(-20px) scale(.9);
+  margin-bottom:24px;
+  filter:drop-shadow(0 0 30px rgba(255,255,255,.3));
+}
+/* college name */
+#ent-college{
+  font-family:'DM Sans',sans-serif;
+  font-size:clamp(13px,2vw,16px);
+  font-weight:700;letter-spacing:4px;
+  text-transform:uppercase;
+  color:rgba(255,255,255,.6);
+  opacity:0;transform:translateY(10px);
+  margin-bottom:48px;
+}
+/* system title */
+#ent-title{
+  font-family:'DM Sans',sans-serif;
+  font-size:clamp(32px,6vw,72px);
+  font-weight:900;
+  line-height:1.05;
+  letter-spacing:-2px;
+  color:#fff;
+  opacity:0;
+  text-shadow:0 0 60px rgba(79,130,255,.6);
+  margin-bottom:12px;
+}
+#ent-title span{color:#4f82ff}
+/* subtitle */
+#ent-sub{
+  font-family:'DM Sans',sans-serif;
+  font-size:clamp(14px,2vw,18px);
+  color:rgba(255,255,255,.5);
+  font-weight:400;letter-spacing:.5px;
+  opacity:0;margin-bottom:60px;
+}
+/* loading bar */
+#ent-bar-wrap{
+  width:280px;height:2px;
+  background:rgba(255,255,255,.1);
+  border-radius:2px;overflow:hidden;
+  opacity:0;margin-bottom:20px;
+}
+#ent-bar{
+  height:100%;width:0%;
+  background:linear-gradient(90deg,#4f82ff,#a78bfa,#4f82ff);
+  background-size:200%;
+  border-radius:2px;
+  animation:barShine 1.5s linear infinite;
+}
+@keyframes barShine{0%{background-position:100%}100%{background-position:-100%}}
+/* loading label */
+#ent-label{
+  font-family:'DM Sans',sans-serif;
+  font-size:12px;font-weight:700;
+  letter-spacing:2px;text-transform:uppercase;
+  color:rgba(255,255,255,.35);
+  opacity:0;
+}
+/* status dots */
+#ent-dots{
+  display:flex;gap:8px;margin-top:32px;opacity:0;
+}
+.ent-dot{
+  width:8px;height:8px;border-radius:50%;
+  background:rgba(255,255,255,.2);
+  transition:background .3s;
+}
+.ent-dot.on{background:#4f82ff;box-shadow:0 0 8px #4f82ff}
+/* enter button */
+#ent-btn{
+  margin-top:40px;
+  padding:16px 48px;
+  background:linear-gradient(135deg,#0f3697,#1e40af);
+  color:#fff;border:none;border-radius:16px;
+  font-family:'DM Sans',sans-serif;
+  font-size:16px;font-weight:800;letter-spacing:.5px;
+  cursor:pointer;opacity:0;
+  box-shadow:0 0 0 0 rgba(79,130,255,.4);
+  transform:translateY(10px);
+  transition:transform .2s,box-shadow .2s,background .2s;
+  position:relative;overflow:hidden;
+}
+#ent-btn::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(255,255,255,.15),transparent);
+  opacity:0;transition:opacity .2s;
+}
+#ent-btn:hover{
+  transform:translateY(-2px);
+  box-shadow:0 8px 32px rgba(79,130,255,.5);
+}
+#ent-btn:hover::before{opacity:1}
+#ent-btn:active{transform:translateY(0)}
+
+/* custom cursor for entrance */
+#ent-cursor{
+  position:fixed;z-index:10001;pointer-events:none;
+  width:32px;height:32px;
+  border:1.5px solid rgba(255,255,255,.6);
+  border-radius:50%;transform:translate(-50%,-50%);
+  transition:width .15s,height .15s,border-color .15s,transform .1s;
+  mix-blend-mode:difference;
+}
+#ent-cursor-dot{
+  position:fixed;z-index:10001;pointer-events:none;
+  width:4px;height:4px;border-radius:50%;
+  background:#fff;transform:translate(-50%,-50%);
+}
+
+/* entrance → dashboard transition */
+#entrance.exit-anim{
+  animation:entranceExit .9s cubic-bezier(.77,0,.18,1) forwards;
+}
+@keyframes entranceExit{
+  0%  {opacity:1;transform:scale(1)}
+  40% {opacity:1;transform:scale(1.04)}
+  100%{opacity:0;transform:scale(1.08);pointer-events:none}
+}
+
+/* stagger reveals */
+.reveal{transition:opacity .7s ease, transform .7s ease}
+</style>
+</head>
+<body>
+<!-- Demo Popup -->
+<div id="demo-popup" style="display:flex; position:fixed; inset:0; 
+     background:rgba(0,0,0,0.75); z-index:10000; 
+     align-items:center; justify-content:center;">
+  <div style="background:#1a1a2e; color:white; padding:32px; border-radius:12px; 
+       max-width:480px; text-align:center; border:1px solid #0f3460;">
+    <h2 style="color:#e94560; margin-bottom:12px;">🚌 NCERC Fleet Management</h2>
+    <p style="margin-bottom:8px; color:#ccc; font-size:14px;">
+      This system is designed for real-time bus monitoring at the college gate 
+      using live CCTV video. For this portfolio showcase, the system runs on 
+      a recorded gate video — detecting buses, reading Kerala number plates, 
+      and logging Entry/Exit events to the dashboard in real time.
+    </p>
+    <p style="margin-bottom:20px; color:#aaa; font-size:13px;">
+      Choose a video to start the detection engine:
+    </p>
+    <div style="display:flex; gap:16px; justify-content:center;">
+      <button onclick="startDemo('entry')" 
+        style="background:#0f3460; color:white; border:none; padding:12px 28px; 
+               border-radius:8px; cursor:pointer; font-size:15px;">
+        ▶ Entry Video (Morning)
+      </button>
+      <button onclick="startDemo('exit')"
+        style="background:#e94560; color:white; border:none; padding:12px 28px; 
+               border-radius:8px; cursor:pointer; font-size:15px;">
+        ▶ Exit Video (Evening)
+      </button>
+    </div>
+    <p style="margin-top:16px; color:#555; font-size:12px;">
+      You can close this and explore the dashboard — detection runs in background.
+    </p>
+    <button onclick="document.getElementById('demo-popup').style.display='none'"
+      style="margin-top:8px; background:transparent; color:#555; border:1px solid #555; 
+             padding:6px 18px; border-radius:6px; cursor:pointer; font-size:12px;">
+      Skip / Explore Dashboard
+    </button>
+  </div>
+</div>
+
+<!-- Floating Video Player -->
+<div id="floating-player" style="display:none; position:fixed; bottom:24px; right:24px; 
+     width:360px; background:#000; border-radius:10px; 
+     box-shadow:0 8px 32px rgba(0,0,0,0.7); z-index:9999; overflow:hidden;">
+  <div id="player-header" style="background:#1a1a2e; color:white; padding:8px 12px; 
+       cursor:move; display:flex; justify-content:space-between; align-items:center;
+       user-select:none;">
+    <span style="font-size:13px;">🎥 Live Detection Running</span>
+    <div style="display:flex; gap:8px;">
+      <button onclick="minimizePlayer()" title="Minimize"
+        style="background:#0f3460; color:white; border:none; 
+               width:24px; height:24px; border-radius:4px; cursor:pointer;">—</button>
+      <button onclick="closePlayer()" title="Close"
+        style="background:#e94560; color:white; border:none; 
+               width:24px; height:24px; border-radius:4px; cursor:pointer;">✕</button>
+    </div>
+  </div>
+  <div id="player-body">
+    <img id="stream-img" style="width:100%; display:block; max-height:260px; 
+         object-fit:contain;" src="" alt="Detection Stream">
+    <div style="background:#111; color:#aaa; padding:6px 10px; font-size:11px;
+         display:flex; justify-content:space-between;">
+      <span id="player-status">Starting detection engine...</span>
+      <button onclick="stopDemo()"
+        style="background:transparent; color:#e94560; border:none; 
+               cursor:pointer; font-size:11px;">■ Stop</button>
+    </div>
+  </div>
+</div>
+<!-- ═══════ ENTRANCE SCREEN ═══════ -->
+<div id="entrance">
+  <div id="entrance-bg"></div>
+  <div id="entrance-vignette"></div>
+  <div id="entrance-scan"></div>
+
+  <div id="entrance-content">
+    <img id="ent-logo"
+         src="https://ncerc.ac.in/images/ncerc_logo_1.png"
+         alt="NCERC"
+         onerror="this.style.display='none'"/>
+
+    <div id="ent-college">Nehru College of Engineering &amp; Research Centre</div>
+
+    <div id="ent-title">Campus<br><span>Fleet</span> System</div>
+    <div id="ent-sub">AI-Powered Bus Detection &amp; Fleet Monitoring</div>
+
+    <div id="ent-bar-wrap"><div id="ent-bar"></div></div>
+    <div id="ent-label">Initialising systems...</div>
+
+    <div id="ent-dots">
+      <div class="ent-dot" id="dot-db"    title="Database"></div>
+      <div class="ent-dot" id="dot-model" title="AI Models"></div>
+      <div class="ent-dot" id="dot-ocr"   title="OCR Engine"></div>
+      <div class="ent-dot" id="dot-cam"   title="Camera Feed"></div>
+      <div class="ent-dot" id="dot-api"   title="API Server"></div>
+    </div>
+
+    <button id="ent-btn" onclick="enterDashboard()">
+      Enter Dashboard &nbsp;→
+    </button>
+  </div>
+</div>
+
+<!-- Custom cursor for entrance -->
+<div id="ent-cursor"></div>
+<div id="ent-cursor-dot"></div>
+
+<!-- MOBILE NAV DRAWER -->
+<div id="nav-drawer" style="display:none;position:fixed;inset:0;z-index:200">
+  <div id="nav-backdrop" onclick="closeNav()" style="position:absolute;inset:0;background:rgba(0,0,0,.5)"></div>
+  <div style="position:absolute;right:0;top:0;bottom:0;width:280px;background:#fff;padding:24px;overflow-y:auto;box-shadow:-8px 0 32px rgba(0,0,0,.15)">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px">
+      <img src="https://ncerc.ac.in/images/ncerc_logo_1.png" style="height:44px;object-fit:contain" onerror="this.style.display='none'"/>
+      <button onclick="closeNav()" style="border:none;background:#f1f5f9;width:36px;height:36px;border-radius:50%;cursor:pointer;font-size:18px;color:#64748b">✕</button>
+    </div>
+    <nav style="display:flex;flex-direction:column;gap:4px">
+      <a href="#" onclick="scrollToTop();closeNav()" style="padding:12px 16px;border-radius:12px;color:#1e293b;text-decoration:none;font-weight:600;font-size:15px;background:#f8fafc">🏠 Dashboard</a>
+      <a href="#" onclick="scrollToSection('log-section');closeNav()" style="padding:12px 16px;border-radius:12px;color:#1e293b;text-decoration:none;font-weight:600;font-size:15px">🚌 Bus Log</a>
+      <a href="#" onclick="scrollToSection('alerts-section');closeNav()" style="padding:12px 16px;border-radius:12px;color:#1e293b;text-decoration:none;font-weight:600;font-size:15px">🔔 Alerts</a>
+      <a href="#" onclick="scrollToSection('about-section');closeNav()" style="padding:12px 16px;border-radius:12px;color:#1e293b;text-decoration:none;font-weight:600;font-size:15px">ℹ️ About</a>
+      <a href="https://ncerc.ac.in" target="_blank" onclick="closeNav()" style="padding:12px 16px;border-radius:12px;color:#0f3697;text-decoration:none;font-weight:600;font-size:15px">🌐 NCERC Website</a>
+    </nav>
+    <div style="margin-top:32px;padding-top:20px;border-top:1px solid #f1f5f9">
+      <div style="font-size:12px;color:#94a3b8;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">System Status</div>
+      <div id="drawer-conn" style="font-size:14px;font-weight:600;color:#15803d">● Live</div>
+    </div>
+  </div>
+</div>
+
+<header>
+  <div class="hdr-left">
+    <img src="https://ncerc.ac.in/images/ncerc_logo_1.png"
+         style="height:44px;object-fit:contain;cursor:pointer"
+         onclick="window.open('https://ncerc.ac.in','_blank')"
+         onerror="this.outerHTML='<div class=hdr-logo><svg viewBox=&quot;0 0 24 24&quot;><path d=&quot;M22 10v6M2 10l10-5 10 5-10 5z&quot;/><path d=&quot;M6 12v5c0 2 6 3 6 3s6-1 6-3v-5&quot;/></svg></div>'"
+         alt="NCERC Logo"/>
+    
+  </div>
+  <h1 class="hdr-title">Campus Fleet Management</h1>
+  <button class="hdr-menu" onclick="openNav()">
+    <svg viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+  </button>
+</header>
+
+<div class="hero" id="hero-bg">
+  <div class="hero-img-layer" id="hero-img"></div>
+  <div class="hero-blur-layer"></div>
+  <div class="hero-color-layer"></div>
+  <div class="hero-grain"></div>
+  <div class="hero-content">
+    <div class="hero-badge">● LIVE MONITORING</div>
+    <h2 class="hero-title">Real-Time Campus<br>Bus Tracking</h2>
+    <p class="hero-sub">Monitor fleet movements with precision and efficiency</p>
+    <div class="hero-stats-row" id="hero-stats-row">
+      <div class="hero-stat"><span id="hs-entry">—</span><span>Entries Today</span></div>
+      <div class="hero-stat-div"></div>
+      <div class="hero-stat"><span id="hs-exit">—</span><span>Exits Today</span></div>
+      <div class="hero-stat-div"></div>
+      <div class="hero-stat"><span id="hs-inside">—</span><span>Inside Now</span></div>
+    </div>
+  </div>
+</div>
+
+<main>
+
+  <div class="overlap-grid">
+    <div class="overlap-card oc-clickable" onclick="showBusList('inside')" title="Tap to see list">
+      <div>
+        <div class="oc-icon"><svg viewBox="0 0 24 24"><path d="M12 22s-8-4.5-8-11.8A8 8 0 0 1 12 2a8 8 0 0 1 8 8.2c0 7.3-8 11.8-8 11.8z"/><circle cx="12" cy="10" r="3"/></svg></div>
+        <div class="oc-num" id="inside-num">—</div>
+        <div class="oc-lbl">Buses Inside Campus</div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
+        <button class="chevbtn"><svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></button>
+        <span style="font-size:11px;color:#94a3b8;font-weight:600">TAP TO VIEW</span>
+      </div>
+    </div>
+    <div class="overlap-card oc-clickable" onclick="showBusList('outside')" title="Tap to see list">
+      <div>
+        <div class="oc-icon" style="background:#f97316"><svg viewBox="0 0 24 24"><rect x="1" y="3" width="15" height="13" rx="2"/><path d="m16 8 4 0 3 4v3h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg></div>
+        <div class="oc-num" id="outside-num">—</div>
+        <div class="oc-lbl">Buses Outside Campus</div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
+        <button class="chevbtn"><svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></button>
+        <span style="font-size:11px;color:#94a3b8;font-weight:600">TAP TO VIEW</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="dt-pill">
+    <div class="dt-inner">
+      <div class="dt-block">
+        <div class="dt-icon"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
+        <div><div class="dt-lbl">Current Date</div><div class="dt-val" id="live-date">Loading...</div></div>
+      </div>
+      <div class="dt-block">
+        <div class="dt-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+        <div><div class="dt-lbl">Current Time</div><div class="dt-val" id="live-time">00:00:00</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="status-grid">
+    <div class="sc b">
+      <div class="sc-icon"><svg viewBox="0 0 24 24"><path d="M12 22s-8-4.5-8-11.8A8 8 0 0 1 12 2a8 8 0 0 1 8 8.2c0 7.3-8 11.8-8 11.8z"/><circle cx="12" cy="10" r="3"/></svg></div>
+      <div><div class="sv">24/7</div><div class="sl">System Status</div></div>
+    </div>
+    <div class="sc g">
+      <div class="sc-icon"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+      <div><div class="sv">Active</div><div class="sl">Fleet Monitoring</div></div>
+    </div>
+    <div class="sc p">
+      <div class="sc-icon"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
+      <div><div class="sv">Real-time</div><div class="sl">Data Updates</div></div>
+    </div>
+  </div>
+
+  <div class="big-grid">
+    <div class="bc gr">
+      <div class="bc-top">
+        <div class="bc-iconw"><svg viewBox="0 0 24 24"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg></div>
+        <button class="chevbtn" style="color:rgba(255,255,255,.6)"><svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></button>
+      </div>
+      <div class="bc-num" id="entry-big">—</div>
+      <div class="bc-lbl">Total Entries Today</div>
+    </div>
+    <div class="bc or">
+      <div class="bc-top">
+        <div class="bc-iconw"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg></div>
+        <button class="chevbtn" style="color:rgba(255,255,255,.6)"><svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></button>
+      </div>
+      <div class="bc-num" id="exit-big">—</div>
+      <div class="bc-lbl">Total Exits Today</div>
+    </div>
+  </div>
+
+  <div class="log-card" id="log-section">
+    <div class="log-hdr">
+      <div class="log-title-blk">
+        <div class="log-icon"><svg viewBox="0 0 24 24"><rect x="1" y="3" width="15" height="13" rx="2"/><path d="m16 8 4 0 3 4v3h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg></div>
+        <div><div class="log-title">Movement Log</div><div class="log-sub">Track all bus entries and exits</div></div>
+      </div>
+      <div class="log-ctrl">
+        <div id="conn-badge" class="live-badge"><div class="live-dot"></div>Live</div>
+        <div class="filter-bar">
+          <button class="ftab active" onclick="setFilter('today',this)">Today</button>
+          <button class="ftab" onclick="setFilter('week',this)">Week</button>
+          <button class="ftab" onclick="setFilter('month',this)">Month</button>
+          <button class="ftab" onclick="setFilter('custom',this)">Custom</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="custom-row" id="custom-row">
+      <label>From</label>
+      <input type="date" id="date-from"/>
+      <label>To</label>
+      <input type="date" id="date-to"/>
+      <button class="apply-btn" onclick="applyCustom()">Apply</button>
+    </div>
+
+    <div class="search-row">
+      <div class="sw">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" id="search-input" placeholder="Search bus number..." oninput="renderTable()"/>
+      </div>
+      <div class="dir-wrap">
+        <button class="filter-btn" onclick="toggleDir()">
+          <svg viewBox="0 0 24 24"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+          <span id="dir-lbl">Filter</span>
+        </button>
+        <div class="dir-menu" id="dir-menu">
+          <div class="dir-opt" onclick="setDir('','Filter')">All Directions</div>
+          <div class="dir-opt g" onclick="setDir('ENTRY','Entry Only')">Entry Only</div>
+          <div class="dir-opt o" onclick="setDir('EXIT','Exit Only')">Exit Only</div>
+        </div>
+      </div>
+      <button class="print-btn" onclick="window.print()">
+        <svg viewBox="0 0 24 24"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+        Print Statement
+      </button>
+    </div>
+
+    <div class="tbl-head">
+      <span>No</span><span>Bus No</span>
+      <span class="col-date">Date</span>
+      <span class="col-time">Time</span>
+      <span>Entry / Exit</span>
+    </div>
+    <div id="tbl-body"></div>
+    <div class="tbl-foot">
+      <span id="rec-count">Showing 0 records</span>
+      <span id="last-upd">Last updated: —</span>
+    </div>
+  </div>
+
+
+<!-- ALERT POPUP -->
+<div class="alert-overlay" id="alert-overlay">
+  <div class="alert-box">
+    <div class="alert-head">
+      <svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      <div class="alert-head-text">
+        <h3 id="alert-title">Schedule Alert</h3>
+        <p id="alert-subtitle">Missing buses detected</p>
+      </div>
+    </div>
+    <div class="alert-body">
+      <div class="alert-meta">
+        <div class="alert-meta-item"><div class="aml">Window</div><div class="amv" id="alert-window">—</div></div>
+        <div class="alert-meta-item"><div class="aml">Missing</div><div class="amv" id="alert-count" style="color:#dc2626">—</div></div>
+        <div class="alert-meta-item"><div class="aml">Type</div><div class="amv" id="alert-direction">—</div></div>
+        <div class="alert-meta-item"><div class="aml">Time</div><div class="amv" id="alert-time">—</div></div>
+      </div>
+      <div class="alert-missing-title">Buses that did not report:</div>
+      <div class="alert-bus-list" id="alert-bus-list"></div>
+    </div>
+    <div class="alert-footer">
+      <button class="alert-dismiss" onclick="closeAlert()">Understood</button>
+    </div>
+  </div>
+</div>
+
+<!-- ALERTS HISTORY PANEL -->
+<div class="alerts-section" id="alerts-section">
+  <div class="alerts-card">
+    <div class="alerts-hdr">
+      <div class="alerts-hdr-left">
+        <div class="alerts-icon"><svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
+        <div><div class="alerts-title">Schedule Alerts</div><div class="alerts-sub" id="alerts-sub">Missing bus notifications</div></div>
+      </div>
+      <button class="apply-btn" onclick="loadAlerts()" style="background:#dc2626">Refresh</button>
+    </div>
+    <div class="alerts-filter">
+      <label>Date</label>
+      <input type="date" id="alerts-date" class="alerts-date-input" onchange="loadAlerts()"/>
+      <button class="alerts-today-btn" onclick="resetAlertsToToday()">Today</button>
+      <div class="alerts-search">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" id="alerts-search-input" placeholder="Search bus number..." oninput="filterAlerts()"/>
+      </div>
+    </div>
+    <div id="alerts-body"><div class="no-alerts">No alerts today — all buses on schedule ✅</div></div>
+  </div>
+</div>
+
+<!-- BUS LIST MODAL -->
+<div class="buslist-overlay" id="buslist-overlay" onclick="if(event.target===this)closeBusList()">
+  <div class="buslist-box">
+    <div class="buslist-head" id="buslist-head">
+      <div>
+        <div class="buslist-head-title" id="buslist-title">Buses Inside Campus</div>
+        <div class="buslist-head-count" id="buslist-count">Loading...</div>
+      </div>
+      <button class="buslist-close" onclick="closeBusList()">✕</button>
+    </div>
+    <div class="buslist-body">
+      <div class="buslist-grid" id="buslist-grid">
+        <div class="buslist-empty">Loading...</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CURSOR ELEMENTS -->
+<div class="hero-cursor" id="hero-cursor"></div>
+<div class="hero-cursor-dot" id="hero-cursor-dot"></div>
+</main>
+
+
+<!-- ABOUT SECTION -->
+<div id="about-section" style="background:#fff;padding:80px 0 60px">
+  <div style="max-width:1280px;margin:0 auto;padding:0 20px">
+    <div style="text-align:center;margin-bottom:48px">
+      <div style="display:inline-flex;align-items:center;gap:10px;background:#eef4ff;border:1px solid #bfdbfe;padding:8px 20px;border-radius:20px;margin-bottom:16px">
+        <span style="font-size:13px;font-weight:700;color:#0f3697;text-transform:uppercase;letter-spacing:.5px">About This System</span>
+      </div>
+      <h2 style="font-size:36px;font-weight:900;color:#1e293b;margin-bottom:12px">Campus Fleet Management System</h2>
+      <p style="font-size:16px;color:#64748b;max-width:600px;margin:0 auto">An AI-powered solution for real-time bus detection and fleet monitoring at NCERC campus gate.</p>
+    </div>
+    <!-- Project cards -->
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin-bottom:48px">
+      <div style="background:#f8fafc;border-radius:20px;padding:28px;border:1px solid #e2e8f0">
+        <div style="background:#0f3697;width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;margin-bottom:16px">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s-8-4.5-8-11.8A8 8 0 0 1 12 2a8 8 0 0 1 8 8.2c0 7.3-8 11.8-8 11.8z"/><circle cx="12" cy="10" r="3"/></svg>
+        </div>
+        <h3 style="font-size:18px;font-weight:800;color:#1e293b;margin-bottom:8px">Real-Time Detection</h3>
+        <p style="font-size:14px;color:#64748b;line-height:1.6">YOLOv12 AI model detects buses at the campus gate and reads Kerala number plates using EasyOCR with automatic error correction.</p>
+      </div>
+      <div style="background:#f8fafc;border-radius:20px;padding:28px;border:1px solid #e2e8f0">
+        <div style="background:#10b981;width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;margin-bottom:16px">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        </div>
+        <h3 style="font-size:18px;font-weight:800;color:#1e293b;margin-bottom:8px">Schedule Monitoring</h3>
+        <p style="font-size:14px;color:#64748b;line-height:1.6">Automatically monitors morning (07:00–09:00) and evening (16:00–18:00) windows. Sends Telegram alerts for any missing buses.</p>
+      </div>
+      <div style="background:#f8fafc;border-radius:20px;padding:28px;border:1px solid #e2e8f0">
+        <div style="background:#a855f7;width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;margin-bottom:16px">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        </div>
+        <h3 style="font-size:18px;font-weight:800;color:#1e293b;margin-bottom:8px">Live Dashboard</h3>
+        <p style="font-size:14px;color:#64748b;line-height:1.6">Real-time web dashboard with Socket.IO push updates. View entry/exit logs, filter by date, search by bus number, and print reports.</p>
+      </div>
+    </div>
+    <!-- Tech stack -->
+    <div style="background:#0b2575;border-radius:20px;padding:32px;color:#fff;margin-bottom:48px">
+      <h3 style="font-size:20px;font-weight:800;margin-bottom:20px;text-align:center">Technology Stack</h3>
+      <div style="display:flex;flex-wrap:wrap;gap:12px;justify-content:center">
+        <span style="background:rgba(255,255,255,.15);padding:8px 20px;border-radius:20px;font-size:14px;font-weight:600">🤖 YOLOv12</span>
+        <span style="background:rgba(255,255,255,.15);padding:8px 20px;border-radius:20px;font-size:14px;font-weight:600">👁️ EasyOCR</span>
+        <span style="background:rgba(255,255,255,.15);padding:8px 20px;border-radius:20px;font-size:14px;font-weight:600">🍃 MongoDB</span>
+        <span style="background:rgba(255,255,255,.15);padding:8px 20px;border-radius:20px;font-size:14px;font-weight:600">⚡ Flask</span>
+        <span style="background:rgba(255,255,255,.15);padding:8px 20px;border-radius:20px;font-size:14px;font-weight:600">🔌 Socket.IO</span>
+        <span style="background:rgba(255,255,255,.15);padding:8px 20px;border-radius:20px;font-size:14px;font-weight:600">🐍 Python 3.10</span>
+        <span style="background:rgba(255,255,255,.15);padding:8px 20px;border-radius:20px;font-size:14px;font-weight:600">📷 OpenCV</span>
+        <span style="background:rgba(255,255,255,.15);padding:8px 20px;border-radius:20px;font-size:14px;font-weight:600">🧠 PyTorch</span>
+      </div>
+    </div>
+    <!-- Developer -->
+    <div style="background:#f8fafc;border-radius:20px;padding:32px;border:1px solid #e2e8f0">
+      <h3 style="font-size:20px;font-weight:800;color:#1e293b;margin-bottom:4px;text-align:center">Developed By</h3>
+      <p style="font-size:14px;color:#64748b;text-align:center;margin-bottom:24px">Mini Project — Department of Computer Science &amp; Engineering</p>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:24px">
+        <div style="background:#fff;border-radius:14px;padding:18px;border:1px solid #e2e8f0;display:flex;align-items:center;gap:14px">
+          <div style="background:#0f3697;width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <span style="color:#fff;font-weight:800;font-size:14px">MI</span>
+          </div>
+          <div>
+            <div style="font-weight:800;font-size:15px;color:#1e293b">Mohammed Irfan A</div>
+            <div style="font-size:12px;color:#0f3697;font-weight:600;margin-top:2px">Team Leader</div>
+          </div>
+        </div>
+        <div style="background:#fff;border-radius:14px;padding:18px;border:1px solid #e2e8f0;display:flex;align-items:center;gap:14px">
+          <div style="background:#10b981;width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <span style="color:#fff;font-weight:800;font-size:14px">SS</span>
+          </div>
+          <div>
+            <div style="font-weight:800;font-size:15px;color:#1e293b">Salvin Sunny</div>
+            <div style="font-size:12px;color:#64748b;font-weight:600;margin-top:2px">Team Member</div>
+          </div>
+        </div>
+        <div style="background:#fff;border-radius:14px;padding:18px;border:1px solid #e2e8f0;display:flex;align-items:center;gap:14px">
+          <div style="background:#a855f7;width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <span style="color:#fff;font-weight:800;font-size:14px">DD</span>
+          </div>
+          <div>
+            <div style="font-weight:800;font-size:15px;color:#1e293b">Diya Dinen</div>
+            <div style="font-size:12px;color:#64748b;font-weight:600;margin-top:2px">Team Member</div>
+          </div>
+        </div>
+        <div style="background:#fff;border-radius:14px;padding:18px;border:1px solid #e2e8f0;display:flex;align-items:center;gap:14px">
+          <div style="background:#f97316;width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <span style="color:#fff;font-weight:800;font-size:14px">BB</span>
+          </div>
+          <div>
+            <div style="font-weight:800;font-size:15px;color:#1e293b">Bhavya Biju</div>
+            <div style="font-size:12px;color:#64748b;font-weight:600;margin-top:2px">Team Member</div>
+          </div>
+        </div>
+      </div>
+      <div style="text-align:center;padding-top:16px;border-top:1px solid #e2e8f0">
+        <p style="font-size:14px;font-weight:700;color:#0f3697">Nehru College of Engineering &amp; Research Centre</p>
+        <p style="font-size:13px;color:#94a3b8;margin-top:4px">Pampady, Thrissur, Kerala — 680597</p>
+      </div>
+    </div>
+  </div>
+</div>
+<footer>
+  <div class="ft-inner">
+    <div class="ft-grid">
+      <div>
+        <div class="ft-brand">
+          <div class="ft-brand-icon"><svg viewBox="0 0 24 24"><rect x="1" y="3" width="15" height="13" rx="2"/><path d="m16 8 4 0 3 4v3h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg></div>
+          <span class="ft-brand-name">Campus Fleet</span>
+        </div>
+        <p class="ft-desc">Intelligent transportation management system for modern educational institutions. Track, monitor, and optimize your campus fleet operations.</p>
+      </div>
+      <div>
+        <div class="ft-h">Quick Links</div>
+        <ul class="ft-links">
+          <li><a href="#">Dashboard</a></li>
+          <li><a href="#">Bus Tracking</a></li>
+          <li><a href="#">Route Management</a></li>
+          <li><a href="#">Reports &amp; Analytics</a></li>
+          <li><a href="#">Settings</a></li>
+        </ul>
+      </div>
+      <div>
+        <div class="ft-h">Contact Us</div>
+        <ul class="ft-contact">
+          <li><svg viewBox="0 0 24 24"><path d="M12 22s-8-4.5-8-11.8A8 8 0 0 1 12 2a8 8 0 0 1 8 8.2c0 7.3-8 11.8-8 11.8z"/><circle cx="12" cy="10" r="3"/></svg><span>Nehru College of Engineering &amp; Research Centre, Pampady, Thrissur, Kerala — 680597</span></li>
+          <li><svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.18 2 2 0 0 1 3.6 1h3a2 2 0 0 1 2 1.72c.13.96.37 1.9.72 2.81a2 2 0 0 1-.45 2.11L7.91 8.59a16 16 0 0 0 6 6l.95-.95a2 2 0 0 1 2.11-.45c.91.35 1.85.59 2.81.72A2 2 0 0 1 21.72 16z"/></svg><span>+91 480 277 3000</span></li>
+          <li><svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg><span><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="84f4f6edeae7edf4e5e8c4eae7e1f6e7aae5e7aaedea">[email&#160;protected]</a></span></li>
+        </ul>
+      </div>
+    </div>
+    <hr class="ft-divider"/>
+    <div class="ft-bottom">
+      <span>© 2026 Campus Fleet Management — NCERC. All rights reserved.</span>
+      <span>Powered by <a href="#">Intelligent Transportation Systems</a></span>
+    </div>
+  </div>
+</footer>
+
+<script>
+// ── GLOBAL ALERT FUNCTIONS (global scope = accessible from onclick) ──────────
+function showAlertPopup(data){
+  document.getElementById('alert-title').textContent=(data.window_label||'')+' Schedule Alert';
+  document.getElementById('alert-subtitle').textContent=data.missing_count+' bus(es) did not '+(data.direction||'report');
+  document.getElementById('alert-window').textContent=(data.window_start||'')+' - '+(data.window_end||'');
+  document.getElementById('alert-count').textContent=data.missing_count+' bus(es)';
+  document.getElementById('alert-direction').textContent=data.direction||'—';
+  document.getElementById('alert-time').textContent=(data.timestamp||'').split(' ')[1]||'—';
+  const list=document.getElementById('alert-bus-list');
+  list.innerHTML=(data.missing_buses||[]).map(b=>`
+    <div class="alert-bus-item">
+      <svg viewBox="0 0 24 24"><rect x="1" y="3" width="15" height="13" rx="2"/>
+      <path d="m16 8 4 0 3 4v3h-7V8z"/>
+      <circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+      <span class="alert-bus-num">${b}</span>
+    </div>`).join('');
+  document.getElementById('alert-overlay').classList.add('show');
+  loadAlerts();
+}
+
+function closeAlert(){
+  document.getElementById('alert-overlay').classList.remove('show');
+}
+
+// ── all loaded alerts stored here for client-side search filter
+let allAlerts = [];
+
+function resetAlertsToToday(){
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('alerts-date').value = today;
+  document.getElementById('alerts-search-input').value = '';
+  loadAlerts();
+}
+
+function filterAlerts(){
+  const q = document.getElementById('alerts-search-input').value.trim().toUpperCase();
+  const filtered = !q ? allAlerts : allAlerts.filter(a =>
+    (a.missing_buses||[]).some(b => b.toUpperCase().includes(q))
+  );
+  renderAlerts(filtered);
+}
+
+function renderAlerts(alerts){
+  const body = document.getElementById('alerts-body');
+  if(!alerts || alerts.length === 0){
+    const dateVal = document.getElementById('alerts-date').value;
+    const today   = new Date().toISOString().split('T')[0];
+    const msg     = dateVal === today
+      ? 'No alerts today — all buses on schedule ✅'
+      : `No alerts found for ${dateVal}`;
+    body.innerHTML = `<div class="no-alerts">${msg}</div>`;
+    return;
+  }
+  body.innerHTML = alerts.map(a => `
+    <div class="alert-row ${a.seen===false?'unseen':''}">
+      <div class="alert-row-icon">
+        <svg viewBox="0 0 24 24">
+          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+          <line x1="12" y1="9" x2="12" y2="13"/>
+          <line x1="12" y1="17" x2="12.01" y2="17"/>
+        </svg>
+      </div>
+      <div class="alert-row-body">
+        <div class="alert-row-title">
+          ${a.window_label} — ${a.missing_count} bus(es) missed ${a.direction}
+          &nbsp;<span style="font-weight:400;color:#94a3b8">(${a.window_start}-${a.window_end})</span>
+        </div>
+        <div class="alert-row-buses">
+          ${(a.missing_buses||[]).map(b=>`<span class="alert-bus-tag">${b}</span>`).join('')}
+        </div>
+      </div>
+      <div style="text-align:right">
+        <div class="alert-row-time">${a.date||''}</div>
+        <div class="alert-row-time">${(a.timestamp||'').split(' ')[1]||''}</div>
+      </div>
+    </div>`).join('');
+}
+
+async function loadAlerts(){
+  try{
+    // Get selected date — default to today
+    const dateInput = document.getElementById('alerts-date');
+    const today     = new Date().toISOString().split('T')[0];
+    if(!dateInput.value) dateInput.value = today;
+    const selectedDate = dateInput.value;
+    const isToday      = selectedDate === today;
+
+    // Update subtitle
+    document.getElementById('alerts-sub').textContent =
+      isToday ? 'Missing bus notifications — today'
+              : `Missing bus notifications — ${selectedDate}`;
+
+    // Check unseen count (only relevant for today)
+    let unseenCount = 0;
+    if(isToday){
+      try{
+        const ur = await fetch(`${API}/api/alerts/unseen`);
+        const ud = await ur.json();
+        unseenCount = ud.unseen_count || 0;
+      }catch(e){}
+    }
+
+    // Fetch alerts for selected date
+    const url = isToday
+      ? `${API}/api/alerts/today`
+      : `${API}/api/alerts/date/${selectedDate}`;
+    const r = await fetch(url);
+    const d = await r.json();
+    allAlerts = d.alerts || [];
+
+    // Update notification badge
+    const existingBadge = document.getElementById('alert-notif-badge');
+    if(existingBadge) existingBadge.remove();
+    if(unseenCount > 0){
+      const badge = document.createElement('span');
+      badge.id    = 'alert-notif-badge';
+      badge.className = 'alert-badge';
+      badge.textContent = unseenCount;
+      document.querySelector('.alerts-hdr-left').appendChild(badge);
+    }
+
+    // Render (apply any existing search filter)
+    filterAlerts();
+
+    // Auto-show popup if unseen alerts found on today view
+    if(isToday && unseenCount > 0 && allAlerts.length > 0){
+      showAlertPopup(allAlerts[0]);
+    }
+
+  }catch(e){ console.warn('Could not load alerts', e); }
+}
+
+// ── MAIN CONFIG ──────────────────────────────────────────────────────────────
+const API='http://localhost:5000';
+const TOTAL=29;
+let allLogs=[], curFilter='today', curDir='', cfFrom='', cfTo='';
+
+// ── CLOCK ────────────────────────────────────────────────────────────────────
+function tick(){
+  const n=new Date();
+  const DAYS=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const d=n.getDate(), nth=d>3&&d<21?'th':({1:'st',2:'nd',3:'rd'}[d%10]||'th');
+  document.getElementById('live-date').textContent=`${DAYS[n.getDay()]}, ${MONTHS[n.getMonth()]} ${d}${nth}, ${n.getFullYear()}`;
+  document.getElementById('live-time').textContent=n.toLocaleTimeString('en-US',{hour12:false,hour:'2-digit',minute:'2-digit',second:'2-digit'});
+}
+setInterval(tick,1000); tick();
+
+// ── FILTER TABS ──────────────────────────────────────────────────────────────
+function setFilter(f,btn){
+  curFilter=f;
+  document.querySelectorAll('.ftab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('custom-row').classList.toggle('show',f==='custom');
+  if(f!=='custom') fetchLogs();
+}
+function applyCustom(){
+  cfFrom=document.getElementById('date-from').value;
+  cfTo=document.getElementById('date-to').value;
+  if(cfFrom&&cfTo) fetchLogs();
+}
+
+// ── DIRECTION DROPDOWN ───────────────────────────────────────────────────────
+function toggleDir(){
+  const m=document.getElementById('dir-menu');
+  m.style.display=m.style.display==='block'?'none':'block';
+}
+function setDir(d,lbl){
+  curDir=d;
+  document.getElementById('dir-lbl').textContent=lbl;
+  document.getElementById('dir-menu').style.display='none';
+  renderTable();
+}
+document.addEventListener('click',e=>{
+  if(!e.target.closest('.dir-wrap')) document.getElementById('dir-menu').style.display='none';
+});
+
+// ── FETCH LOGS FROM BACKEND ──────────────────────────────────────────────────
+async function fetchLogs(){
+  try{
+    let url=`${API}/api/logs/today`;
+    if(curFilter==='week')        url=`${API}/api/logs/week`;
+    else if(curFilter==='month')  url=`${API}/api/logs/month`;
+    else if(curFilter==='custom'&&cfFrom&&cfTo) url=`${API}/api/logs/range?from=${cfFrom}&to=${cfTo}`;
+
+    const [lr,sr]=await Promise.all([
+      fetch(url),
+      fetch(`${API}/api/stats/today`)
+    ]);
+    const ld=await lr.json(), sd=await sr.json();
+
+    allLogs=Array.isArray(ld)?ld:(ld.logs||[]);
+    document.getElementById('entry-big').textContent=sd.entry_count??0;
+    document.getElementById('exit-big').textContent=sd.exit_count??0;
+    setConn(true);
+    calcInOut();
+    renderTable();
+    updTime();
+  }catch(e){
+    console.warn('Backend offline — showing demo data');
+    setConn(false);
+    demoData();
+  }
+}
+
+// ── DEMO DATA (shown when backend is offline) ────────────────────────────────
+function demoData(){
+  const t=new Date().toISOString().split('T')[0];
+  const buses=['KL13Q1577','KL48T0617','KL08Z0277','KL08AF3035','KL48S1156','KL45A0790','KL48U9410','KL08AH8299','KL51R2595'];
+  allLogs=[];
+  buses.forEach((b,i)=>{
+    allLogs.push({bus_number:b,direction:'ENTRY',date:t,time:`07:${String(i*7+5).padStart(2,'0')}:00`,timestamp:`${t} 07:${String(i*7+5).padStart(2,'0')}:00`});
+    if(i<6) allLogs.push({bus_number:b,direction:'EXIT',date:t,time:`16:${String(i*9+5).padStart(2,'0')}:00`,timestamp:`${t} 16:${String(i*9+5).padStart(2,'0')}:00`});
+  });
+  const entries=allLogs.filter(l=>l.direction==='ENTRY'&&l.date===t).length;
+  const exits=allLogs.filter(l=>l.direction==='EXIT'&&l.date===t).length;
+  document.getElementById('entry-big').textContent=entries;
+  document.getElementById('exit-big').textContent=exits;
+  calcInOut();
+  renderTable();
+  updTime();
+}
+
+// ── CALCULATE INSIDE / OUTSIDE ───────────────────────────────────────────────
+function calcInOut(){
+  const t=new Date().toISOString().split('T')[0];
+  const tl=allLogs.filter(l=>l.date===t);
+  const entered=new Set(tl.filter(l=>l.direction==='ENTRY').map(l=>l.bus_number));
+  const exited =new Set(tl.filter(l=>l.direction==='EXIT').map(l=>l.bus_number));
+  const inside =[...entered].filter(b=>!exited.has(b)).length;
+  document.getElementById('inside-num').textContent=inside;
+  document.getElementById('outside-num').textContent=Math.max(0,TOTAL-inside);
+  updateHeroStats();
+}
+
+// ── RENDER TABLE ─────────────────────────────────────────────────────────────
+function renderTable(){
+  const q=document.getElementById('search-input').value.trim().toUpperCase();
+  let rows=allLogs.filter(l=>{
+    const mq=!q||(l.bus_number||'').includes(q);
+    const md=!curDir||l.direction===curDir;
+    return mq&&md;
+  }).slice().sort((a,b)=>(b.timestamp||'').localeCompare(a.timestamp||''));
+
+  const body=document.getElementById('tbl-body');
+  if(rows.length===0){
+    body.innerHTML=`<div class="empty-st">
+      <div class="empty-circle"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div>
+      <div class="empty-title">No records found</div>
+      <div class="empty-sub">Try adjusting your search or filter criteria</div>
+    </div>`;
+  }else{
+    body.innerHTML=rows.map((l,i)=>`
+      <div class="tbl-row">
+        <span class="tbl-num">${i+1}</span>
+        <span class="tbl-plate">${l.bus_number||'—'}</span>
+        <span class="tbl-date col-date">${l.date||'—'}</span>
+        <span class="tbl-time col-time">${l.time||'—'}</span>
+        <span><span class="badge ${(l.direction||'').toLowerCase()}">
+          ${l.direction==='ENTRY'
+            ?'<svg viewBox="0 0 24 24"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg> ENTRY'
+            :'<svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg> EXIT'}
+        </span></span>
+      </div>`).join('');
+  }
+  document.getElementById('rec-count').textContent=`Showing ${rows.length} of ${allLogs.length} records`;
+}
+
+// ── UPDATE TIMESTAMP ─────────────────────────────────────────────────────────
+function updTime(){
+  const n=new Date(), d=n.getDate();
+  const nth=d>3&&d<21?'th':({1:'st',2:'nd',3:'rd'}[d%10]||'th');
+  const mo=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  document.getElementById('last-upd').textContent=`Last updated: ${mo[n.getMonth()]} ${d}${nth}, ${n.getFullYear()} ${n.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',hour12:false})}`;
+}
+
+// ── CONNECTION BADGE ─────────────────────────────────────────────────────────
+function setConn(on){
+  const b=document.getElementById('conn-badge');
+  b.className=on?'live-badge':'off-badge';
+  b.innerHTML=on
+    ?'<div class="live-dot"></div>Live'
+    :'<div style="width:7px;height:7px;border-radius:50%;background:#ef4444;display:inline-block"></div> Offline';
+}
+
+// ── SOCKET.IO REAL-TIME ──────────────────────────────────────────────────────
+try{
+  const s=io(API,{transports:['websocket','polling'],reconnectionAttempts:5});
+  s.on('connect',()=>{
+    setConn(true);
+    loadAlerts();   // immediately load any alerts fired before dashboard opened
+    fetchLogs();    // immediately reload logs on reconnect
+  });
+  s.on('disconnect',()=>setConn(false));
+  s.on('connect_error',()=>setConn(false));
+
+  // New bus detection → add to table instantly
+  s.on('new_detection',data=>{
+    allLogs.unshift(data);
+    calcInOut();
+    const t=new Date().toISOString().split('T')[0];
+    const e=allLogs.filter(l=>l.date===t&&l.direction==='ENTRY').length;
+    const x=allLogs.filter(l=>l.date===t&&l.direction==='EXIT').length;
+    document.getElementById('entry-big').textContent=e;
+    document.getElementById('exit-big').textContent=x;
+    renderTable();
+    updTime();
+    setTimeout(()=>{
+      const r=document.querySelector('.tbl-row:first-child');
+      if(r){r.classList.add('flash');setTimeout(()=>r.classList.remove('flash'),900);}
+    },100);
+  });
+
+  // Schedule alert popup
+  s.on('schedule_alert',data=>{ showAlertPopup(data); });
+
+}catch(e){ console.warn('Socket.IO not available'); setConn(false); }
+
+// ── AUTO POLL every 15 sec as fallback ──────────────────────────────────────
+setInterval(fetchLogs,15000);
+setInterval(loadAlerts, 30000);  // check alerts every 30 seconds
+
+// ── INITIAL LOAD ─────────────────────────────────────────────────────────────
+fetchLogs();
+loadAlerts();
+
+// ── HERO MOUSE PARALLAX + CURSOR ────────────────────────────
+const heroEl      = document.getElementById('hero-bg');
+const heroImg     = document.getElementById('hero-img');
+const heroCursor  = document.getElementById('hero-cursor');
+const cursorDot   = document.getElementById('hero-cursor-dot');
+const blurLayer   = document.querySelector('.hero-blur-layer');
+let mouseInHero   = false;
+let cx = 0, cy = 0, tx = 0, ty = 0;
+
+heroEl.addEventListener('mouseenter', ()=>{
+  mouseInHero = true;
+  heroCursor.style.display  = 'block';
+  cursorDot.style.display   = 'block';
+  heroImg.style.transition  = 'none';
+});
+
+heroEl.addEventListener('mouseleave', ()=>{
+  mouseInHero = false;
+  heroCursor.style.display  = 'none';
+  cursorDot.style.display   = 'none';
+  heroImg.style.transition  = 'filter .6s ease, transform .6s ease';
+  heroImg.style.transform   = 'scale(1.08)';
+  heroImg.style.filter      = 'blur(0px) brightness(0.55)';
+  blurLayer.style.setProperty('--mx','50%');
+  blurLayer.style.setProperty('--my','50%');
+});
+
+heroEl.addEventListener('mousemove', e=>{
+  const rect  = heroEl.getBoundingClientRect();
+  const xPct  = (e.clientX - rect.left)  / rect.width;
+  const yPct  = (e.clientY - rect.top)   / rect.height;
+
+  // cursor follow
+  heroCursor.style.left = e.clientX + 'px';
+  heroCursor.style.top  = e.clientY + 'px';
+  cursorDot.style.left  = e.clientX + 'px';
+  cursorDot.style.top   = e.clientY + 'px';
+
+  // parallax shift
+  const shiftX = (xPct - 0.5) * 18;
+  const shiftY = (yPct - 0.5) * 12;
+  heroImg.style.transform = `scale(1.08) translate(${shiftX}px,${shiftY}px)`;
+
+  // dynamic blur — more blur away from cursor
+  const distCenter = Math.sqrt(Math.pow(xPct-0.5,2)+Math.pow(yPct-0.5,2));
+  const blurVal    = Math.round(distCenter * 5);
+  heroImg.style.filter = `blur(${blurVal}px) brightness(0.5)`;
+
+  // spotlight colour shift
+  blurLayer.style.background = `radial-gradient(ellipse 50% 45% at ${xPct*100}% ${yPct*100}%, rgba(15,54,151,.55) 0%, rgba(0,0,0,.0) 70%)`;
+
+  // spawn particle
+  if(Math.random() < 0.12) spawnParticle(e.clientX, e.clientY);
+});
+
+// Mouse trail particles
+function spawnParticle(x, y){
+  const p = document.createElement('div');
+  p.className = 'particle';
+  const size = 4 + Math.random()*6;
+  const hue  = 200 + Math.random()*40;
+  p.style.cssText = `left:${x}px;top:${y}px;width:${size}px;height:${size}px;background:hsla(${hue},80%,70%,.5)`;
+  document.body.appendChild(p);
+  setTimeout(()=> p.remove(), 800);
+}
+
+// ── NAVIGATION DRAWER ────────────────────────────────────────
+function openNav(){
+  document.getElementById('nav-drawer').style.display = 'block';
+  document.body.style.overflow = 'hidden';
+}
+function closeNav(){
+  document.getElementById('nav-drawer').style.display = 'none';
+  document.body.style.overflow = '';
+}
+function scrollToTop(){
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+function scrollToSection(id){
+  const el = document.getElementById(id);
+  if(!el) return;
+  const top = el.getBoundingClientRect().top + window.scrollY - 88;
+  window.scrollTo({top: top, behavior:'smooth'});
+}
+
+// ── BUS LIST MODAL ───────────────────────────────────────────
+function showBusList(type){
+  const today   = new Date().toISOString().split('T')[0];
+  const isInside = type === 'inside';
+  const head     = document.getElementById('buslist-head');
+  const title    = document.getElementById('buslist-title');
+  const countEl  = document.getElementById('buslist-count');
+  const grid     = document.getElementById('buslist-grid');
+
+  head.className  = 'buslist-head ' + (isInside ? 'inside' : 'outside');
+  title.textContent = isInside ? 'Buses Inside Campus' : 'Buses Outside Campus';
+  countEl.textContent = 'Loading...';
+  grid.innerHTML  = '<div class="buslist-empty">Loading...</div>';
+  document.getElementById('buslist-overlay').classList.add('show');
+
+  // Calculate from allLogs
+  const todayLogs  = allLogs.filter(l => l.date === today);
+  const entered    = new Set(todayLogs.filter(l=>l.direction==='ENTRY').map(l=>l.bus_number));
+  const exited     = new Set(todayLogs.filter(l=>l.direction==='EXIT').map(l=>l.bus_number));
+  const insideBuses  = [...entered].filter(b => !exited.has(b));
+
+  // Get last seen time for each bus
+  function lastSeen(bus){
+    const logs = todayLogs.filter(l=>l.bus_number===bus);
+    if(!logs.length) return '';
+    return logs.sort((a,b)=>b.timestamp.localeCompare(a.timestamp))[0].time || '';
+  }
+
+  let buses = [];
+  if(isInside){
+    buses = insideBuses;
+  } else {
+    // Outside = registered buses NOT inside
+    // Fetch from /api/buses and subtract inside
+    fetch(`${API}/api/buses`).then(r=>r.json()).then(d=>{
+      const allRegistered = d.buses || [];
+      buses = allRegistered.filter(b => !insideBuses.includes(b));
+      renderBusList(buses, type, lastSeen, countEl, grid);
+    }).catch(()=>{
+      grid.innerHTML = '<div class="buslist-empty">Could not load bus list</div>';
+    });
+    return;
+  }
+  renderBusList(buses, type, lastSeen, countEl, grid);
+}
+
+function renderBusList(buses, type, lastSeenFn, countEl, grid){
+  const isInside = type === 'inside';
+  countEl.textContent = buses.length + ' bus' + (buses.length===1?'':'es');
+  if(buses.length === 0){
+    grid.innerHTML = `<div class="buslist-empty">${isInside ? 'No buses currently inside campus' : 'All buses are inside campus'}</div>`;
+    return;
+  }
+  grid.innerHTML = buses.map(b => `
+    <div class="buslist-item ${isInside?'':'outside-item'}">
+      <svg viewBox="0 0 24 24">
+        <rect x="1" y="3" width="15" height="13" rx="2"/>
+        <path d="m16 8 4 0 3 4v3h-7V8z"/>
+        <circle cx="5.5" cy="18.5" r="2.5"/>
+        <circle cx="18.5" cy="18.5" r="2.5"/>
+      </svg>
+      <div>
+        <div class="buslist-plate">${b}</div>
+        ${isInside && lastSeenFn(b) ? `<div class="buslist-time">Last: ${lastSeenFn(b)}</div>` : ''}
+      </div>
+    </div>`).join('');
+}
+
+function closeBusList(){
+  document.getElementById('buslist-overlay').classList.remove('show');
+}
+
+// Update hero stats row when data loads
+function updateHeroStats(){
+  const today  = new Date().toISOString().split('T')[0];
+  const tl     = allLogs.filter(l=>l.date===today);
+  const entry  = tl.filter(l=>l.direction==='ENTRY').length;
+  const exit   = tl.filter(l=>l.direction==='EXIT').length;
+  const entered= new Set(tl.filter(l=>l.direction==='ENTRY').map(l=>l.bus_number));
+  const exited = new Set(tl.filter(l=>l.direction==='EXIT').map(l=>l.bus_number));
+  const inside = [...entered].filter(b=>!exited.has(b)).length;
+  const hsEntry  = document.getElementById('hs-entry');
+  const hsExit   = document.getElementById('hs-exit');
+  const hsInside = document.getElementById('hs-inside');
+  if(hsEntry)  hsEntry.textContent  = entry;
+  if(hsExit)   hsExit.textContent   = exit;
+  if(hsInside) hsInside.textContent = inside;
+}
+
+
+// ═══════════════════════════════════════════════════════════
+//  ENTRANCE SCREEN ANIMATION
+// ═══════════════════════════════════════════════════════════
+(function(){
+  const ent      = document.getElementById('entrance');
+  const bg       = document.getElementById('entrance-bg');
+  const scan     = document.getElementById('entrance-scan');
+  const logo     = document.getElementById('ent-logo');
+  const college  = document.getElementById('ent-college');
+  const title    = document.getElementById('ent-title');
+  const sub      = document.getElementById('ent-sub');
+  const barWrap  = document.getElementById('ent-bar-wrap');
+  const bar      = document.getElementById('ent-bar');
+  const label    = document.getElementById('ent-label');
+  const dotsEl   = document.getElementById('ent-dots');
+  const btn      = document.getElementById('ent-btn');
+  const cursor   = document.getElementById('ent-cursor');
+  const curDot   = document.getElementById('ent-cursor-dot');
+
+  // ── Custom cursor ─────────────────────────────────────────
+  document.addEventListener('mousemove', e=>{
+    cursor.style.left  = e.clientX+'px';
+    cursor.style.top   = e.clientY+'px';
+    curDot.style.left  = e.clientX+'px';
+    curDot.style.top   = e.clientY+'px';
+  });
+
+  // Cursor grow on hover over button
+  if(btn){
+    btn.addEventListener('mouseenter',()=>{
+      cursor.style.width='52px';cursor.style.height='52px';
+      cursor.style.borderColor='rgba(79,130,255,.8)';
+    });
+    btn.addEventListener('mouseleave',()=>{
+      cursor.style.width='32px';cursor.style.height='32px';
+      cursor.style.borderColor='rgba(255,255,255,.6)';
+    });
+  }
+
+  // ── Reveal helper ─────────────────────────────────────────
+  function reveal(el, delay, fromY=16){
+    setTimeout(()=>{
+      el.style.opacity='1';
+      el.style.transform='translateY(0) scale(1)';
+    }, delay);
+  }
+
+  // ── Sequence labels ───────────────────────────────────────
+  const loadSteps = [
+    {dot:'dot-db',    text:'Connecting to database...'},
+    {dot:'dot-model', text:'Loading AI detection models...'},
+    {dot:'dot-ocr',   text:'Initialising OCR engine...'},
+    {dot:'dot-cam',   text:'Checking camera feed...'},
+    {dot:'dot-api',   text:'Starting API server...'},
+  ];
+
+  // ── Timeline ──────────────────────────────────────────────
+
+  // t=0: bg starts brightening
+  setTimeout(()=>{
+    bg.style.transition = 'filter 1.8s ease, transform 2.5s ease';
+    bg.style.filter     = 'brightness(0.38) blur(3px)';
+    bg.style.transform  = 'scale(1.05)';
+    scan.style.transition = 'opacity 1s ease';
+    scan.style.opacity  = '1';
+  }, 100);
+
+  // t=600: logo
+  setTimeout(()=>{
+    logo.style.opacity   = '1';
+    logo.style.transform = 'translateY(0) scale(1)';
+    logo.style.transition= 'opacity .8s ease, transform .8s ease';
+  }, 600);
+
+  // t=1000: college name
+  setTimeout(()=>{
+    college.style.opacity   = '1';
+    college.style.transform = 'translateY(0)';
+    college.style.transition= 'opacity .7s ease, transform .7s ease';
+  }, 1000);
+
+  // t=1500: title
+  setTimeout(()=>{
+    title.style.opacity   = '1';
+    title.style.transform = 'translateY(0)';
+    title.style.transition= 'opacity .8s ease, transform .8s ease';
+  }, 1500);
+
+  // t=2000: subtitle
+  setTimeout(()=>{
+    sub.style.opacity   = '1';
+    sub.style.transform = 'translateY(0)';
+    sub.style.transition= 'opacity .7s ease, transform .7s ease';
+  }, 2000);
+
+  // t=2400: loading bar appears
+  setTimeout(()=>{
+    barWrap.style.opacity   = '1';
+    barWrap.style.transition= 'opacity .5s ease';
+    label.style.opacity     = '1';
+    label.style.transition  = 'opacity .5s ease';
+    dotsEl.style.opacity    = '1';
+    dotsEl.style.transition = 'opacity .5s ease';
+  }, 2400);
+
+  // t=2600→4200: loading bar progress + dots
+  let stepDelay = 2600;
+  loadSteps.forEach((step, i)=>{
+    setTimeout(()=>{
+      // advance bar
+      bar.style.transition = 'width .5s ease';
+      bar.style.width      = ((i+1)/loadSteps.length * 100) + '%';
+      // light dot
+      document.getElementById(step.dot).classList.add('on');
+      // update label
+      label.textContent = step.text;
+    }, stepDelay + i * 340);
+  });
+
+  // t=4400: bar complete label
+  setTimeout(()=>{
+    bar.style.width  = '100%';
+    label.textContent = 'All systems ready';
+    label.style.color = 'rgba(79,130,255,.8)';
+  }, 4400);
+
+  // t=4800: show enter button
+  setTimeout(()=>{
+    btn.style.opacity   = '1';
+    btn.style.transform = 'translateY(0)';
+    btn.style.transition= 'opacity .6s ease, transform .6s ease, box-shadow .2s, background .2s';
+    // pulse glow
+    btn.style.animation = 'btnPulse 2s ease infinite';
+  }, 4800);
+
+  // Add pulse keyframe dynamically
+  const style = document.createElement('style');
+  style.textContent = `@keyframes btnPulse{
+    0%,100%{box-shadow:0 0 0 0 rgba(79,130,255,.4)}
+    50%{box-shadow:0 0 0 14px rgba(79,130,255,0)}
+  }`;
+  document.head.appendChild(style);
+
+})();
+
+// ── ENTER DASHBOARD ──────────────────────────────────────────
+function enterDashboard(){
+  const ent    = document.getElementById('entrance');
+  const cursor = document.getElementById('ent-cursor');
+  const curDot = document.getElementById('ent-cursor-dot');
+
+  // ripple from button
+  const btn   = document.getElementById('ent-btn');
+  const rect  = btn.getBoundingClientRect();
+  const ripple= document.createElement('div');
+  ripple.style.cssText = `
+    position:fixed;
+    left:${rect.left+rect.width/2}px;top:${rect.top+rect.height/2}px;
+    width:4px;height:4px;border-radius:50%;
+    background:rgba(79,130,255,.6);
+    transform:translate(-50%,-50%) scale(1);
+    transition:transform 1s ease, opacity 1s ease;
+    z-index:10002;pointer-events:none;
+  `;
+  document.body.appendChild(ripple);
+  setTimeout(()=>{
+    ripple.style.transform = 'translate(-50%,-50%) scale(400)';
+    ripple.style.opacity   = '0';
+  }, 10);
+
+  // hide custom cursors
+  cursor.style.display = 'none';
+  curDot.style.display = 'none';
+
+  // exit animation
+  setTimeout(()=>{
+    ent.classList.add('exit-anim');
+    setTimeout(()=>{
+      ent.style.display='none';
+      ripple.remove();
+      // trigger main dashboard entrance
+      document.querySelectorAll('.overlap-card,.sc,.bc,.log-card,.alerts-card').forEach((el,i)=>{
+        el.style.opacity='0';
+        el.style.transform='translateY(24px)';
+        setTimeout(()=>{
+          el.style.transition='opacity .6s ease, transform .6s ease';
+          el.style.opacity='1';
+          el.style.transform='translateY(0)';
+        }, i*80);
+      });
+    }, 900);
+  }, 200);
+}
+
+</script>
+<script>
+// ── Demo control ──────────────────────────────────────────────
+const BACKEND = 'https://your-render-app.onrender.com';  
+// IMPORTANT: replace above with your actual Render URL before deploying
+
+function startDemo(type) {
+    document.getElementById('demo-popup').style.display = 'none';
+    document.getElementById('floating-player').style.display = 'block';
+    document.getElementById('player-status').textContent = 
+        'Starting ' + type + ' detection...';
+
+    fetch(BACKEND + '/api/demo/start', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({type: type})
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.status === 'started' || data.status === 'already_running') {
+            // small delay to let yolo_ocr.py initialize
+            setTimeout(() => {
+                document.getElementById('stream-img').src = 
+                    BACKEND + '/api/demo/stream?' + Date.now();
+                document.getElementById('player-status').textContent = 
+                    'Detection running — ' + type + ' video';
+            }, 3000);
+        }
+    })
+    .catch(() => {
+        document.getElementById('player-status').textContent = 
+            'Could not connect to detection server.';
+    });
+}
+
+function stopDemo() {
+    fetch(BACKEND + '/api/demo/stop', {method:'POST'});
+    document.getElementById('stream-img').src = '';
+    document.getElementById('player-status').textContent = 'Detection stopped.';
+}
+
+function minimizePlayer() {
+    const body = document.getElementById('player-body');
+    body.style.display = body.style.display === 'none' ? 'block' : 'none';
+}
+
+function closePlayer() {
+    stopDemo();
+    document.getElementById('floating-player').style.display = 'none';
+}
+
+// ── Drag to move floating player ──────────────────────────────
+const player  = document.getElementById('floating-player');
+const header  = document.getElementById('player-header');
+let dragging  = false, startX, startY, startLeft, startBottom;
+
+header.addEventListener('mousedown', e => {
+    dragging   = true;
+    startX     = e.clientX;
+    startY     = e.clientY;
+    startLeft  = player.offsetLeft;
+    startBottom = parseInt(player.style.bottom) || 24;
+});
+document.addEventListener('mousemove', e => {
+    if (!dragging) return;
+    player.style.left   = (startLeft + e.clientX - startX) + 'px';
+    player.style.right  = 'auto';
+    player.style.bottom = (startBottom - (e.clientY - startY)) + 'px';
+});
+document.addEventListener('mouseup', () => { dragging = false; });
+</script>
+</body>
+</html>
