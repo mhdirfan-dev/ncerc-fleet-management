@@ -120,7 +120,9 @@ def get_buses_detected(direction, window_start, window_end):
     correctly checks morning data — it queries the real
     database records from today.
     """
-    today    = datetime.datetime.now().strftime("%Y-%m-%d")
+    utc_now = datetime.datetime.utcnow()
+    ist_now = utc_now + datetime.timedelta(hours=5, minutes=30)
+    today   = ist_now.strftime("%Y-%m-%d")
     start_ts = f"{today} {window_start}:00"
     end_ts   = f"{today} {window_end}:00"
 
@@ -279,16 +281,20 @@ _last_date     = None
 
 def reset_daily_tracker():
     global _alerted_today, _last_date
-    today = datetime.datetime.now().strftime("%Y-%m-%d")
+    utc_now = datetime.datetime.utcnow()
+    ist_now = utc_now + datetime.timedelta(hours=5, minutes=30)
+    today = ist_now.strftime("%Y-%m-%d")
     if _last_date != today:
         _alerted_today = set()
         _last_date     = today
         print(f"[SCHEDULE] New day reset: {today}")
 
 def time_passed(hhmm):
-    now = datetime.datetime.now()
-    t   = datetime.datetime.strptime(hhmm, "%H:%M")
-    return now >= now.replace(hour=t.hour, minute=t.minute, second=0, microsecond=0)
+    # use IST timezone (UTC+5:30)
+    utc_now = datetime.datetime.utcnow()
+    ist_now = utc_now + datetime.timedelta(hours=5, minutes=30)
+    t = datetime.datetime.strptime(hhmm, "%H:%M")
+    return ist_now >= ist_now.replace(hour=t.hour, minute=t.minute, second=0, microsecond=0)
 
 def check_windows():
     official_buses = load_official_buses()

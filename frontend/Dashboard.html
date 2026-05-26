@@ -1719,7 +1719,7 @@ const BACKEND = 'https://ncerc-backend.onrender.com';
 function startDemo(type) {
     document.getElementById('demo-popup').style.display = 'none';
     document.getElementById('floating-player').style.display = 'block';
-    const videoUrl = type === 'entry' ? 'entry_demo.mp4' : 'exit_demo.mp4';
+    const videoUrl = type === 'entry' ? 'entry_output.mp4' : 'exit_output.mp4';
     document.getElementById('stream-img').style.display = 'none';
     document.getElementById('demo-video').style.display = 'block';
     document.getElementById('demo-video').src = videoUrl;

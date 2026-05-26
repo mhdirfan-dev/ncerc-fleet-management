@@ -22,7 +22,7 @@ from cont_database import (
     get_today_logs, get_logs_by_bus,
     get_logs_by_date, get_last_n_logs,
     get_bus_status, get_all_buses_today,
-    update_status
+    update_status, clear_old_records
 )
 
 app = Flask(__name__)
@@ -416,8 +416,8 @@ if __name__ == "__main__":
 
     # Connect to MongoDB
     if connect():
-        # Sync any backup entries
         sync_backup()
+        clear_old_records(365)
         print("\n[API] Starting Flask server...")
         print("[API] Endpoints:")
         print("  GET  http://localhost:5000/api/health")

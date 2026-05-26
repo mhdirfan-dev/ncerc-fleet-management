@@ -208,7 +208,14 @@ def update_status(bus_number, timestamp, new_status):
         {"$set": {"status": new_status}}
     )
     return r.modified_count > 0
-
+def clear_old_records(days_to_keep=365):
+    global _collection
+    if not is_connected():
+        return
+    cutoff_date = (datetime.datetime.now() - 
+                   datetime.timedelta(days=days_to_keep)).strftime("%Y-%m-%d")
+    result = _collection.delete_many({"date": {"$lt": cutoff_date}})
+    print(f"[DB] Cleared {result.deleted_count} records older than {cutoff_date}")
 # ──────────────────────────────────────────────────────────────
 # TEST
 # ──────────────────────────────────────────────────────────────
