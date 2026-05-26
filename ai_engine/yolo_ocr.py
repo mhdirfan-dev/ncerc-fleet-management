@@ -562,9 +562,9 @@ def run_detection():
         wait_ms    = max(1, frame_ms - elapsed_ms)
 
         if streaming_mode:
-            _, jpeg = cv2.imencode('.jpg', frame, [cv2.IMWRITE_JPEG_QUALITY, 60])
+            small = cv2.resize(frame, (480, 270))
+            _, jpeg = cv2.imencode('.jpg', small, [cv2.IMWRITE_JPEG_QUALITY, 40])
             data = jpeg.tobytes()
-            # write length prefix then frame bytes to stdout
             import struct
             sys.stdout.buffer.write(struct.pack('>I', len(data)))
             sys.stdout.buffer.write(data)

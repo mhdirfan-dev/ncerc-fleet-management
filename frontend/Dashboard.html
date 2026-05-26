@@ -1717,7 +1717,7 @@ function startDemo(type) {
     document.getElementById('demo-popup').style.display = 'none';
     document.getElementById('floating-player').style.display = 'block';
     document.getElementById('player-status').textContent = 
-        'Starting ' + type + ' detection...';
+        'Starting ' + type + ' detection — please wait 20 seconds for AI engine to initialize...';
 
     fetch(BACKEND + '/api/demo/start', {
         method: 'POST',
@@ -1729,11 +1729,11 @@ function startDemo(type) {
         if (data.status === 'started' || data.status === 'already_running') {
             // small delay to let yolo_ocr.py initialize
             setTimeout(() => {
-                document.getElementById('stream-img').src = 
-                    BACKEND + '/api/demo/stream?' + Date.now();
-                document.getElementById('player-status').textContent = 
-                    'Detection running — ' + type + ' video';
-            }, 3000);
+              document.getElementById('stream-img').src = 
+                BACKEND + '/api/demo/stream?' + Date.now();
+              document.getElementById('player-status').textContent = 
+                'Detection running — ' + type + ' video';
+             }, 20000);
         }
     })
     .catch(() => {

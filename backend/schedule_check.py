@@ -35,10 +35,9 @@ from pymongo.errors import ConnectionFailure, ServerSelectionTimeoutError
 # ──────────────────────────────────────────────────────────────
 #  TELEGRAM CONFIGURATION
 # ──────────────────────────────────────────────────────────────
-TELEGRAM_BOT_TOKEN = "8538513607:AAFKk3lUYoQspKmkuGIfH1_-BjiAaE8VXWA"
-TELEGRAM_CHAT_IDS  = [
-    "1908474653",   # Transport Officer
-]
+import os
+TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "")
+TELEGRAM_CHAT_IDS  = [os.environ.get("TELEGRAM_CHAT_ID", "")]
 
 # ──────────────────────────────────────────────────────────────
 #  SCHEDULE WINDOWS
