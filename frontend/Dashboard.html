@@ -566,6 +566,9 @@ footer{background:#2c2c2c;color:#9ca3af;border-top:4px solid #0f3697;padding:64p
   <div id="player-body">
     <img id="stream-img" style="width:100%; display:block; max-height:260px; 
          object-fit:contain;" src="" alt="Detection Stream">
+    <video id="demo-video" style="width:100%; display:none; max-height:260px;"
+           controls autoplay muted playsinline>
+    </video>
     <div style="background:#111; color:#aaa; padding:6px 10px; font-size:11px;
          display:flex; justify-content:space-between;">
       <span id="player-status">Starting detection engine...</span>
@@ -1716,30 +1719,13 @@ const BACKEND = 'https://ncerc-backend.onrender.com';
 function startDemo(type) {
     document.getElementById('demo-popup').style.display = 'none';
     document.getElementById('floating-player').style.display = 'block';
-    document.getElementById('player-status').textContent = 
-        'Starting ' + type + ' detection — please wait 20 seconds for AI engine to initialize...';
-
-    fetch(BACKEND + '/api/demo/start', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({type: type})
-    })
-    .then(r => r.json())
-    .then(data => {
-        if (data.status === 'started' || data.status === 'already_running') {
-            // small delay to let yolo_ocr.py initialize
-            setTimeout(() => {
-              document.getElementById('stream-img').src = 
-                BACKEND + '/api/demo/stream?' + Date.now();
-              document.getElementById('player-status').textContent = 
-                'Detection running — ' + type + ' video';
-             }, 20000);
-        }
-    })
-    .catch(() => {
-        document.getElementById('player-status').textContent = 
-            'Could not connect to detection server.';
-    });
+    const videoUrl = type === 'entry' ? 'entry_demo.mp4' : 'exit_demo.mp4';
+    document.getElementById('stream-img').style.display = 'none';
+    document.getElementById('demo-video').style.display = 'block';
+    document.getElementById('demo-video').src = videoUrl;
+    document.getElementById('demo-video').play();
+    document.getElementById('player-status').textContent =
+        'Playing ' + type + ' detection recording';
 }
 
 function stopDemo() {

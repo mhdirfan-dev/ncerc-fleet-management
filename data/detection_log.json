@@ -1,0 +1,42 @@
+[
+  {
+    "bus_number": "KL13Q1577",
+    "direction": "ENTRY",
+    "date": "2026-05-26",
+    "time": "12:48:11",
+    "timestamp": "2026-05-26 12:48:11",
+    "status": "synced"
+  },
+  {
+    "bus_number": "KL48T0617",
+    "direction": "ENTRY",
+    "date": "2026-05-26",
+    "time": "12:49:28",
+    "timestamp": "2026-05-26 12:49:28",
+    "status": "synced"
+  },
+  {
+    "bus_number": "KL08Z0277",
+    "direction": "ENTRY",
+    "date": "2026-05-26",
+    "time": "12:50:41",
+    "timestamp": "2026-05-26 12:50:41",
+    "status": "synced"
+  },
+  {
+    "bus_number": "KL51R2831",
+    "direction": "EXIT",
+    "date": "2026-05-26",
+    "time": "12:55:16",
+    "timestamp": "2026-05-26 12:55:16",
+    "status": "synced"
+  },
+  {
+    "bus_number": "KL51P0309",
+    "direction": "EXIT",
+    "date": "2026-05-26",
+    "time": "12:57:25",
+    "timestamp": "2026-05-26 12:57:25",
+    "status": "synced"
+  }
+]
