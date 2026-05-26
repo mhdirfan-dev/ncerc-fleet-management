@@ -22,3 +22,6 @@ ai_engine/models/license_plate_detector.pt
 .DS_Store
 Thumbs.db
 ```
+# force include compressed demo videos
+!frontend/entry_compressed.mp4
+!frontend/exit_compressed.mp4
