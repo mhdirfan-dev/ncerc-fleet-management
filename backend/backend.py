@@ -231,12 +231,11 @@ def start_demo():
     data       = request.json or {}
     video_type = data.get("type", "entry")
 
+    base = os.path.join(os.path.dirname(__file__), '..', 'ai_engine')
     if video_type == "entry":
-        video_file = os.path.join(os.path.dirname(__file__),
-                                  '..', 'ai_engine', 'test_video1.MOV')
+        video_file = os.path.join(base, 'test_video1.MOV')
     else:
-        video_file = os.path.join(os.path.dirname(__file__),
-                                  '..', 'ai_engine', 'test_video4.mov')
+        video_file = os.path.join(base, 'test_video4.mov')
 
     if demo_running and demo_process and demo_process.poll() is None:
         return jsonify({"status": "already_running"})

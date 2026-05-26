@@ -1,0 +1,13 @@
+flask
+flask-cors
+flask-socketio
+pymongo
+requests
+eventlet
+opencv-python-headless
+numpy==1.26.4
+easyocr
+ultralytics
+torch
+torchvision
+torchaudio
