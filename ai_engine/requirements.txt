@@ -1,0 +1,9 @@
+opencv-python-headless
+numpy==1.26.4
+easyocr
+ultralytics
+pymongo
+requests
+torch
+torchvision
+torchaudio
