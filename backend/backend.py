@@ -26,8 +26,8 @@ from cont_database import (
 )
 
 app = Flask(__name__)
-CORS(app, origins=["https://ncerc-fleet.vercel.app"])
-socketio = SocketIO(app, cors_allowed_origins="https://ncerc-fleet.vercel.app")
+CORS(app, origins=["https://ncerc-fleet-management.vercel.app"])
+socketio = SocketIO(app, cors_allowed_origins="https://ncerc-fleet-management.vercel.app")
 
 BUS_NUMBERS_FILE = os.path.join(os.path.dirname(__file__), '..', 'config', 'bus_numbers.txt')
 
