@@ -9,9 +9,14 @@ def run_backend():
 
 def run_schedule():
     import time
-    time.sleep(10)
+    time.sleep(15)
     schedule_path = os.path.join(os.path.dirname(__file__), 'backend', 'schedule_check.py')
-    subprocess.run([sys.executable, schedule_path])
+    while True:
+        try:
+            subprocess.run([sys.executable, schedule_path])
+        except Exception as e:
+            print(f"[SCHEDULE] Crashed: {e} — restarting in 30s")
+            time.sleep(30)
 
 backend_dir = os.path.join(os.path.dirname(__file__), 'backend')
 os.chdir(backend_dir)

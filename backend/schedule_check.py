@@ -290,7 +290,6 @@ def reset_daily_tracker():
         print(f"[SCHEDULE] New day reset: {today}")
 
 def time_passed(hhmm):
-    # use IST timezone (UTC+5:30)
     utc_now = datetime.datetime.utcnow()
     ist_now = utc_now + datetime.timedelta(hours=5, minutes=30)
     t = datetime.datetime.strptime(hhmm, "%H:%M")
